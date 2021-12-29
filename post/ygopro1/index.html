@@ -4,14 +4,14 @@
 <meta http-equiv=x-ua-compatible content="IE=edge,chrome=1">
 <meta name=viewport content="width=device-width,initial-scale=1,maximum-scale=1">
 <meta http-equiv=content-security-policy content="upgrade-insecure-requests">
-<title> hugo相关操作 - rayrain's blog </title>
+<title> ygopro源码分析 - rayrain's blog </title>
 <meta name=keywords content="righteoux">
 <meta name=author content="rayrain">
-<meta property="og:title" content="hugo相关操作">
+<meta property="og:title" content="ygopro源码分析">
 <meta property="og:site_name" content="rayrain's blog">
 <meta property="og:image" content="/img/author.jpg">
-<meta name=title content="hugo相关操作 - rayrain's blog">
-<meta name=description content="about hugo">
+<meta name=title content="ygopro源码分析 - rayrain's blog">
+<meta name=description content="about ygopro">
 <link rel="shortcut icon" href=/img/favicon.ico>
 <link rel=apple-touch-icon href=/img/apple-touch-icon.png>
 <link rel=apple-touch-icon-precomposed href=/img/apple-touch-icon.png>
@@ -101,8 +101,8 @@
 <article class="post post-type-normal" itemscope itemtype=http://schema.org/Article>
 <header class=post-header>
 <h1 class=post-title itemprop="name headline">
-<a class=post-title-link href=http://rayrain.xyz/post/hugo_manual/ itemprop=url>
-hugo相关操作
+<a class=post-title-link href=http://rayrain.xyz/post/ygopro1/ itemprop=url>
+ygopro源码分析
 </a>
 </h1>
 <div class=post-meta>
@@ -117,15 +117,15 @@ hugo相关操作
 |
 <i class="fa fa-file-word-o fa-fw"></i>
 <span class=post-meta-item-text>字数：</span>
-<span class=leancloud-world-count>46 字</span>
+<span class=leancloud-world-count>2453 字</span>
 </span>
 <span>
 |
 <i class="fa fa-eye fa-fw"></i>
 <span class=post-meta-item-text>阅读：</span>
-<span class=leancloud-view-count>1分钟</span>
+<span class=leancloud-view-count>5分钟</span>
 </span>
-<span id=/post/hugo_manual/ class=leancloud_visitors data-flag-title=hugo相关操作>
+<span id=/post/ygopro1/ class=leancloud_visitors data-flag-title=ygopro源码分析>
 |
 <i class="fa fa-binoculars fa-fw"></i>
 <span class=post-meta-item-text>阅读次数：</span>
@@ -134,22 +134,168 @@ hugo相关操作
 </div>
 </header>
 <div class=post-body itemprop=articleBody>
-<p>hugo简单操作</p>
-<h2 id=生成仓库中需要的内容>生成仓库中需要的内容</h2>
-<pre><code>hugo
+<h1 id=总览>总览</h1>
+<h2 id=1简单介绍>1.简单介绍</h2>
+<p><a href=https://github.com/Fluorohydride/ygopro>ygopro</a>是一个开源免费的游戏王模拟器,可以模拟几乎所有的游戏王卡片,并且在源码的级别上同时支持windows linux 和macos等操作系统,不过这个项目的创建者Fluorohydride(圆神)从2016年就神隠了,这个项目由一群爱好者一直维护,还有两个主要的对战服务器,233服和萌卡mycard.</p>
+<p>本文的读者想必都是决斗者了,一些专有名词就不解释了,默认大家都懂了.</p>
+<p>源码由3部分组成,还用了若干的第三方库.</p>
+<pre><code>ygopro:游戏的客户端本体
+        |-irrlicht:游戏引擎,负责游戏画面和GUI
+        |-freetype:字体引擎,负责让irrlicht显示中文
+        |-sqlite3:轻量级数据库,存储卡片的数据,用于卡片的查找搜寻
+        |-libevent2:网络库,实现联机对战
+        |-lzma:压缩算法,用于游戏录像
+ocgcore:脚本处理引擎
+        |-lua5.3:用于读取各种脚本
+script:lua编写的卡片脚本
 </code></pre>
-<h2 id=运行hugo服务器>运行hugo服务器</h2>
-<pre><code>hugo server
+<ul>
+<li>
+<p>ygopro使用的音频引擎是irrKlang,不开源,我直接选择性忽略了.</p>
+</li>
+<li>
+<p>我全程在archlinux上分析的源码,文中有关windows的地方我都验证过了</p>
+</li>
+<li>
+<p>不会分析TAG模式和replay</p>
+</li>
+</ul>
+<h2 id=2前期准备>2.前期准备</h2>
+<h3 id=21-下载源码>2.1 下载源码</h3>
+<pre><code>git clone --recurse https://github.com/Fluorohydride/ygopro.git
 </code></pre>
-<h2 id=push到仓库>push到仓库</h2>
-<pre><code>git remote add origin git@github.com:Reisen1969/Reisen1969.github.io.git
+<p>这个命令可以源码的3部分全部下载下来.不包括第三方库.</p>
+<p>然后就是编译了,打开文件夹后可以看到本项目似乎支持cmake和premake4.</p>
+<p>实际上这个CMakeList文件的编写者是在ubuntu系linux下测试的,如果你使用ubuntu系的linux的话,安装好各种库之后就可以用cmake一键编译了,如果不是的话就往下看吧.</p>
+<h3 id=22-使用visualstudio编译>2.2 使用VisualStudio编译</h3>
+<p>我不太喜欢这个重量级的软件,如果想要用vs编译的话,建议去参考<a href=https://github.com/mercury233/ygopro/blob/test/.travis.yml>尸体233的Travis CI脚本</a>,按照这个脚本一步步操作,可以生成sln项目文件,然后就能用vs编译了,下面的内容就可以直接跳过去了,直接去看第3节了.</p>
+<h3 id=23-使用vcpkg管理第三方库>2.3 使用vcpkg管理第三方库</h3>
+<p>如果你按照上面的操作使用vs编译的话,你需要下载一堆第三方库的源码,然后解压到指定目录,特别麻烦,而且这些库是"一次性"的,所以我推荐使用vcpkg去统一管理这些第三方库,具体使用方法我就不多说了,<del>懂得都懂</del>,<a href=https://github.com/microsoft/vcpkg/blob/master/README_zh_CN.md>官方文档</a>.</p>
+<blockquote>
+<p>我用的linux,自带包管理工具,也需要用vcpkg吗?</p>
+</blockquote>
+<p>如果使用的是非ubuntu系的话,还是建议使用,因为vcpkg可以完美嵌入cmake,如果使用的是自带的包管理工具的话,可能cmake无法find到某个库,头文件路径也可能跟代码有出入,用了vcpkg,<del>这一切就都解决了</del>.</p>
+<h3 id=24-使用vscode>2.4 使用vscode</h3>
+<p>如果没有选择vs的话,vscode就是最佳选择了,话是这么说,但vs改装还得装,因为编译器msvc是必须的.
+需要的vscode插件:C/C++ ,CMake 和CMake Tools.</p>
+<blockquote>
+<p>关于CLion</p>
+</blockquote>
+<p>我使用过一段时间的CLion,它的体验基本上跟vscode一致,但存在一些缺点:</p>
+<ul>
+<li>占用资源比较大</li>
+<li>多线程调试很差,甚至不如直接用gdb.(这是我遇到的问题,我没找到原因)</li>
+</ul>
+<h3 id=25-linux上使用cmakegcc编译>2.5 linux上使用cmake+gcc编译</h3>
+<p>如上面所说,使用vcpkg管理第三方库,嵌入项目自带的CMakeLists文件即可.</p>
+<p>具体做法:将原本的第三方库相关内容去掉换成vcpkg</p>
+<h3 id=26-windows上使用cmakemsvc编译>2.6 windows上使用cmake+msvc编译</h3>
+<h3 id=杂项>杂项</h3>
+<blockquote>
+<p>游戏配置的读取</p>
+</blockquote>
+<h3 id=irrlicht部分>irrlicht部分</h3>
+<p>irrlicht是一个古老的游戏引擎,网上几乎没有什么中文资料,不过对于ygopro来说,只用了一些简单的图形效果和很复古的GUI,比如下面的程序通过改变卡片的横坐标来表示卡组的洗牌动画</p>
+<div class=highlight><pre tabindex=0 style=background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-fallback data-lang=fallback>for (auto cit = mainGame-&gt;dField.deck[player].begin(); cit != mainGame-&gt;dField.deck[player].end(); ++cit) {
+					(*cit)-&gt;dPos = irr::core::vector3df(rnd.rand() * 0.4f / rnd.rand_max - 0.2f, 0, 0);
+					(*cit)-&gt;dRot = irr::core::vector3df(0, 0, 0);
+					(*cit)-&gt;is_moving = true;
+					(*cit)-&gt;aniFrame = 3;
+				}
+</code></pre></div><p>想学习irrlicht的话建议去看官方的<a href="https://irrlicht.sourceforge.io/?page_id=291">Tutorials</a>.</p>
+<p>irrlicht写的非常规范,容易阅读,但毕竟十几年前的产物了,并不推荐用这个制作游戏.</p>
+<ul>
+<li>I 开头的是 纯虚接口类</li>
+<li>C 开头的是 接口实现类</li>
+<li>E 是枚举值</li>
+<li>S 是结构体</li>
+</ul>
+<p>irrlichtr是个3D引擎,想深入学习需要OpenGL或者Direct3D相关的知识.</p>
+<p>但是对于ygopro来说,只需要了解下面这两点就可以了</p>
+<blockquote>
+<p>1.irrlicht的初始化操作</p>
+</blockquote>
+<p>首先需要获取一个<strong>IrrlichtDevice</strong>,这是irrlicht最根本的对象,有两种方法得到</p>
+<div class=highlight><pre tabindex=0 style=background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-fallback data-lang=fallback>自定义params,也是ygopro使用的方法
+IrrlichtDevice* device;
+irr::SIrrlichtCreationParameters params = irr::SIrrlichtCreationParameters(); 
+//对params做一些自定义
+device = irr::createDeviceEx(params);
 
-git push origin master
-</code></pre>
+或者 使用默认params
+函数原型:	
+IrrlichtDevice*  createDevice(
+		video::E_DRIVER_TYPE deviceType = video::EDT_SOFTWARE,
+		const core::dimension2d&lt;u32&gt;&amp; windowSize = (core::dimension2d&lt;u32&gt;(640,480)),
+		u32 bits = 16,
+		bool fullscreen = false,
+		bool stencilbuffer = false,
+		bool vsync = false,
+		IEventReceiver* receiver = 0);
+</code></pre></div><p><strong>使用IrrlichtDevice获取其他对象</strong></p>
+<div class=highlight><pre tabindex=0 style=background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-fallback data-lang=fallback>获取IVideoDriver,所有图形相关的接口
+IVideoDriver* driver = device-&gt;getVideoDriver();	
+
+获取IGUIEnvironment,用于管理所有GUI组件
+IGUIEnvironment* env = device-&gt;getGUIEnvironment();  
+
+获取ISceneManager,管理camera 等其他资源
+ISceneManager* smgr = device-&gt;getSceneManager();  
+</code></pre></div><p><strong>主循环</strong></p>
+<div class=highlight><pre tabindex=0 style=background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-fallback data-lang=fallback>while(device-&gt;run()) {
+
+    //绘制GUI 绘制图形
+    //接收玩家输入等
+}
+</code></pre></div><blockquote>
+<p>2.GUI相关</p>
+</blockquote>
+<p>irrlicht的GUI还是比较落后的.ygopro用了七八百行,来添加GUI元素</p>
+<p><strong>添加GUI的步骤</strong></p>
+<div class=highlight><pre tabindex=0 style=background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-fallback data-lang=fallback>首先去要预先定义一些宏来表示GUI的id(类似QT里的信号),如:
+#define BUTTON_LAN_MODE				100
+#define BUTTON_SINGLE_MODE			101
+#define BUTTON_REPLAY_MODE			102
+#define BUTTON_TEST_MODE			103
+
+添加btn
+btnLanMode = env-&gt;addButton(rect&lt;s32&gt;(10, 30, 270, 60), wMainMenu, BUTTON_LAN_MODE, dataManager.GetSysString(1200));  
+添加checkbox
+chkHostPrepReady[i] = env-&gt;addCheckBox(false, rect&lt;s32&gt;(250, 75 + i * 25, 270, 95 + i * 25), wHostPrepare, CHECKBOX_HP_READY, L&#34;&#34;);
+
+初始化这些元素时都有一个参数是id,当GUI元素被操作的时候这些id就代表了不同的信号.
+</code></pre></div><p><strong>如何使用GUI</strong></p>
+<p>需要一个对象来接受这些信号,从而使这些GUI元素发挥作用.在irrlicht里,这个对象被称为EventReceiver.</p>
+<p>同一时刻,一个device只能有一个EventReceiver.</p>
+<div class=highlight><pre tabindex=0 style=background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-fallback data-lang=fallback>这行程序为device设置了一个EventReceiver
+device-&gt;setEventReceiver(&amp;menuHandler);
+</code></pre></div><p>任意一个类,只要重写了OnEvent(const irr::SEvent& event)方法,就可以成为EventReceiver</p>
+<div class=highlight><pre tabindex=0 style=background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-fallback data-lang=fallback>声明
+class MenuHandler: public irr::IEventReceiver {        
+public:
+	virtual bool OnEvent(const irr::SEvent&amp; event);
+};
+
+实现
+bool MenuHandler::OnEvent(const irr::SEvent&amp; event) {
+    switch(event.EventType){ //获取event类型
+    case irr::EET_GUI_EVENT:               //GUI事件
+        //根据id判断是哪个GUI元素,然后做出相应操作
+        s32 id = event.GUIEvent.Caller-&gt;getID();
+       
+    case irr::EET_MOUSE_INPUT_EVENT:    //鼠标输入事件
+    case irr::EET_KEY_INPUT_EVENT:      //键盘输入事件
+        //判断哪个健被按下
+        switch(event.KeyInput.Key) 
+    }
+
+}
+
+</code></pre></div>
 </div>
 <footer class=post-footer>
 <div class=post-tags>
-<a href=/tags/hugo rel=tag title=hugo>#hugo#</a>
+<a href=/tags/ygopro rel=tag title=ygopro>#ygopro#</a>
 </div>
 <div class=post-nav>
 <div class=article-copyright>
@@ -159,10 +305,10 @@ git push origin master
 </div>
 <div class=article-copyright-info>
 <p>
-<span>声明：</span>hugo相关操作
+<span>声明：</span>ygopro源码分析
 </p>
 <p>
-<span>链接：</span>http://rayrain.xyz/post/hugo_manual/
+<span>链接：</span>http://rayrain.xyz/post/ygopro1/
 </p>
 <p>
 <span>作者：</span>rayrain
@@ -192,10 +338,13 @@ git push origin master
 </div>
 <div class=post-nav>
 <div class="post-nav-next post-nav-item">
+<a href=http://rayrain.xyz/post/hugo_manual/ rel=next title=hugo相关操作>
+<i class="fa fa-chevron-left"></i> hugo相关操作
+</a>
 </div>
 <div class="post-nav-prev post-nav-item">
-<a href=http://rayrain.xyz/post/ygopro1/ rel=prev title=ygopro源码分析>
-ygopro源码分析
+<a href=http://rayrain.xyz/post/markdown-syntax/ rel=prev title=Markdown语法手册>
+Markdown语法手册
 <i class="fa fa-chevron-right"></i>
 </a>
 </div>
@@ -285,9 +434,19 @@ a righteoux
 <div class=post-toc>
 <div class=post-toc-content><nav id=TableOfContents>
 <ul>
-<li><a href=#生成仓库中需要的内容>生成仓库中需要的内容</a></li>
-<li><a href=#运行hugo服务器>运行hugo服务器</a></li>
-<li><a href=#push到仓库>push到仓库</a></li>
+<li><a href=#1简单介绍>1.简单介绍</a></li>
+<li><a href=#2前期准备>2.前期准备</a>
+<ul>
+<li><a href=#21-下载源码>2.1 下载源码</a></li>
+<li><a href=#22-使用visualstudio编译>2.2 使用VisualStudio编译</a></li>
+<li><a href=#23-使用vcpkg管理第三方库>2.3 使用vcpkg管理第三方库</a></li>
+<li><a href=#24-使用vscode>2.4 使用vscode</a></li>
+<li><a href=#25-linux上使用cmakegcc编译>2.5 linux上使用cmake+gcc编译</a></li>
+<li><a href=#26-windows上使用cmakemsvc编译>2.6 windows上使用cmake+msvc编译</a></li>
+<li><a href=#杂项>杂项</a></li>
+<li><a href=#irrlicht部分>irrlicht部分</a></li>
+</ul>
+</li>
 </ul>
 </nav></div>
 </div>
