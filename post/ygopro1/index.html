@@ -117,13 +117,13 @@ ygopro源码分析
 |
 <i class="fa fa-file-word-o fa-fw"></i>
 <span class=post-meta-item-text>字数：</span>
-<span class=leancloud-world-count>2453 字</span>
+<span class=leancloud-world-count>4105 字</span>
 </span>
 <span>
 |
 <i class="fa fa-eye fa-fw"></i>
 <span class=post-meta-item-text>阅读：</span>
-<span class=leancloud-view-count>5分钟</span>
+<span class=leancloud-view-count>9分钟</span>
 </span>
 <span id=/post/ygopro1/ class=leancloud_visitors data-flag-title=ygopro源码分析>
 |
@@ -192,9 +192,15 @@ script:lua编写的卡片脚本
 <h3 id=26-windows上使用cmakemsvc编译>2.6 windows上使用cmake+msvc编译</h3>
 <h3 id=杂项>杂项</h3>
 <blockquote>
-<p>游戏配置的读取</p>
+<p>游戏配置的读取
+ygopro所有的游戏配置都写在文本文件里</p>
 </blockquote>
-<h3 id=irrlicht部分>irrlicht部分</h3>
+<ul>
+<li>lflist.conf 禁卡表文件,包含了所有的禁卡表</li>
+<li>strings.conf 在客户端上显示的所有文字</li>
+<li>system.conf 一些设置选项</li>
+</ul>
+<h3 id=irrlicht>irrlicht</h3>
 <p>irrlicht是一个古老的游戏引擎,网上几乎没有什么中文资料,不过对于ygopro来说,只用了一些简单的图形效果和很复古的GUI,比如下面的程序通过改变卡片的横坐标来表示卡组的洗牌动画</p>
 <div class=highlight><pre tabindex=0 style=background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-fallback data-lang=fallback>for (auto cit = mainGame-&gt;dField.deck[player].begin(); cit != mainGame-&gt;dField.deck[player].end(); ++cit) {
 					(*cit)-&gt;dPos = irr::core::vector3df(rnd.rand() * 0.4f / rnd.rand_max - 0.2f, 0, 0);
@@ -291,7 +297,101 @@ bool MenuHandler::OnEvent(const irr::SEvent&amp; event) {
 
 }
 
-</code></pre></div>
+</code></pre></div><h3 id=sqlite>sqlite</h3>
+<p>ygopro使用sqlite把所有卡片的信息存储在cards.cdb这个文件中.可以使用<a href=https://sqlitebrowser.org/>sqlitebrowser</a>来方便的操作这个文件.</p>
+<p>cards.cdb中有两个表,datas和texts
+datas的内容是卡片的信息(用数字表示),texts的内容是跟卡片有关的字符串.</p>
+<p>datas的表头如下:</p>
+<table>
+<thead>
+<tr>
+<th>id</th>
+<th>ot</th>
+<th>alias</th>
+<th>setcode</th>
+<th>type</th>
+<th>atk</th>
+<th>def</th>
+<th>level</th>
+<th>race</th>
+<th>attribute</th>
+<th>category</th>
+</tr>
+</thead>
+</table>
+<p>需注意:这些数值的用途大部分是在卡组构造界面搜索卡片</p>
+<ul>
+<li>id :表示卡片的官方代码</li>
+<li>ot :表示卡片的限制情况 0代表禁止 3代表无限制</li>
+<li>alias:表示别名,有些卡片被科乐美复刻了多次,比如青眼白龙,复刻后的青眼白龙的alias就是初版青眼白龙的id</li>
+<li>setcode :一个10进制数,表示卡片所属的字段,把这个数转换成16进制可得到字段, 每个字段4位16进制数.strings.conf文件中存储了所有字段</li>
+</ul>
+<p>举个例子:数据库中查到的setcode最大值的卡片是"希望皇 拟声乌托邦",所属字段是"刷拉拉(0x8f)" &ldquo;我我我(0x54)&rdquo; &ldquo;隆隆隆(0x59)&rdquo; &ldquo;怒怒怒(0x82)",这张卡片的setcode是36592129229979791,
+转换成16进制是82 0059 0054 008F</p>
+<ul>
+<li>type :一个10进制数,转换成2进制后,表示卡片类型.</li>
+<li>atk :攻击力</li>
+<li>def:防御力</li>
+<li>level: 等级 or 阶级 or link值</li>
+<li>race:种族</li>
+<li>attribute:属性</li>
+<li>category:一个10进制数,转换成32bit的二进制数,恰好对应卡片搜索的中的32个效果.</li>
+</ul>
+<p>举个例子:随机选择了一张卡"暗之支配者-佐克&rdquo;,其category值为134217730,写成二进制是00001000000000000000000000000010,倒着看,恰好对应第二个效果"怪兽破坏"和倒数第五个效果"幸运",</p>
+<p>至于为什么要倒着看,因为代码中是通过下面的方式设置过滤选项的</p>
+<div class=highlight><pre tabindex=0 style=background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-fallback data-lang=fallback>long long filter = 0x1;
+for(int i = 0; i &lt; 32; ++i, filter &lt;&lt;= 1)
+    if(mainGame-&gt;chkCategory[i]-&gt;isChecked())
+        filter_effect |= filter;	
+</code></pre></div><p>texts的内容比较简单 就不展开了.</p>
+<h2 id=网络部分>网络部分</h2>
+<p>当一个玩家点击"新建主机"时,会同时建立一个server和client,server会立即开始监听,然后client会立即连接server,当另一个玩家点击加入游戏时,会建立一个client按照地址和端口去连接server.</p>
+<p>当server接收到client的连接后,会新建一个bufferevent建立与client之间的连接</p>
+<p>非TAG模式下,第三个以上的玩家再加入游戏就会变成观众.</p>
+<h3 id=client给server发送数据>client给server发送数据</h3>
+<p>这个操作重载了3个函数</p>
+<div class=highlight><pre tabindex=0 style=background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-fallback data-lang=fallback>static void SendPacketToServer(unsigned char proto);
+
+template&lt;typename ST&gt;
+static void SendPacketToServer(unsigned char proto, ST&amp; st);
+
+static void SendBufferToServer(unsigned char proto, void* buffer, size_t len);
+</code></pre></div><p>实际上发送的数据有一个固定的格式</p>
+<div class=highlight><pre tabindex=0 style=background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-fallback data-lang=fallback>     16bit             8bit     若干附加内容
+1+附加内容的字节数     proto      
+
+</code></pre></div><h3 id=server接收到数据后>server接收到数据后</h3>
+<p>首先会根据数据的前两个字节(packet_len)来判断数据数否正确</p>
+<div class=highlight><pre tabindex=0 style=background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-fallback data-lang=fallback>if(len &lt; 2)
+    return;
+evbuffer_copyout(input, &amp;packet_len, 2);	//将数据的前两位 (包的长度) 复制到 packet_len
+if(len &lt; (size_t)packet_len + 2)
+    return;
+</code></pre></div><p>然后跳过表示packet_len的前两个字节,从第三个字节开始处理</p>
+<div class=highlight><pre tabindex=0 style=background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-fallback data-lang=fallback>void NetServer::HandleCTOSPacket(DuelPlayer* dp, char* data, unsigned int len);
+</code></pre></div><p>HandleCTOSPacket函数会根据不同的proto来做出不同的反应,处理过之后会通过下一节的函数来给玩家和观战者发送数据</p>
+<h3 id=server给client发送数据>server给client发送数据</h3>
+<p>同样重载了3个函数</p>
+<div class=highlight><pre tabindex=0 style=background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-fallback data-lang=fallback>static void SendPacketToPlayer(DuelPlayer* dp, unsigned char proto);
+
+template&lt;typename ST&gt;
+static void SendPacketToPlayer(DuelPlayer* dp, unsigned char proto, ST&amp; st) 
+
+static void SendBufferToPlayer(DuelPlayer* dp, unsigned char proto, void* buffer, size_t len);
+</code></pre></div><p>发送数据的格式和上文一致</p>
+<p>这个函数执行完之后通常需要立即执行</p>
+<div class=highlight><pre tabindex=0 style=background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-fallback data-lang=fallback>static void ReSendToPlayer(DuelPlayer* dp);
+</code></pre></div><p>给另一个玩家以及观战者发送相同的数据</p>
+<h2 id=client接收到数据后>client接收到数据后</h2>
+<p>和server类似,client首先会根据数据的前两个字节(packet_len)来判断数据数否正确</p>
+<div class=highlight><pre tabindex=0 style=background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-fallback data-lang=fallback>if(len &lt; 2)
+    return;
+evbuffer_copyout(input, &amp;packet_len, 2);  
+if(len &lt; (size_t)packet_len + 2)			
+    return;
+</code></pre></div><p>然后跳过表示packet_len的前两个字节,从第三个字节开始处理</p>
+<div class=highlight><pre tabindex=0 style=background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-fallback data-lang=fallback>void DuelClient::HandleSTOCPacketLan(char* data, unsigned int len);
+</code></pre></div><p>HandleSTOCPacketLan函数会通过不同的proto进行让client做出不同的操作</p>
 </div>
 <footer class=post-footer>
 <div class=post-tags>
@@ -383,7 +483,7 @@ a righteoux
 <nav class="site-state motion-element">
 <div class="site-state-item site-state-posts">
 <a href=/post/>
-<span class=site-state-item-count>6</span>
+<span class=site-state-item-count>7</span>
 <span class=site-state-item-name>日志</span>
 </a>
 </div>
@@ -395,7 +495,7 @@ a righteoux
 </div>
 <div class="site-state-item site-state-tags">
 <a href=/tags/>
-<span class=site-state-item-count>7</span>
+<span class=site-state-item-count>8</span>
 <span class=site-state-item-name>标签</span>
 </a>
 </div>
@@ -422,6 +522,9 @@ a righteoux
 <a href=/tags/hugo>Hugo</a>
 </li>
 <li class=tagcloud-of-blogroll-item>
+<a href=/tags/lua>Lua</a>
+</li>
+<li class=tagcloud-of-blogroll-item>
 <a href=/tags/text>Text</a>
 </li>
 <li class=tagcloud-of-blogroll-item>
@@ -444,9 +547,18 @@ a righteoux
 <li><a href=#25-linux上使用cmakegcc编译>2.5 linux上使用cmake+gcc编译</a></li>
 <li><a href=#26-windows上使用cmakemsvc编译>2.6 windows上使用cmake+msvc编译</a></li>
 <li><a href=#杂项>杂项</a></li>
-<li><a href=#irrlicht部分>irrlicht部分</a></li>
+<li><a href=#irrlicht>irrlicht</a></li>
+<li><a href=#sqlite>sqlite</a></li>
 </ul>
 </li>
+<li><a href=#网络部分>网络部分</a>
+<ul>
+<li><a href=#client给server发送数据>client给server发送数据</a></li>
+<li><a href=#server接收到数据后>server接收到数据后</a></li>
+<li><a href=#server给client发送数据>server给client发送数据</a></li>
+</ul>
+</li>
+<li><a href=#client接收到数据后>client接收到数据后</a></li>
 </ul>
 </nav></div>
 </div>
@@ -459,7 +571,7 @@ a righteoux
 <div class=footer-inner>
 <div class=copyright>
 <span class=copyright-year>
-&copy; 2010 - 2021
+&copy; 2010 - 2022
 </span>
 <span class=with-love><i class="fa fa-heart"></i></span>
 <span class=copyright-author>rayrain's blog</span>
