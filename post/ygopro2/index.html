@@ -117,7 +117,7 @@ ygopro源码分析2:lua的使用
 |
 <i class="fa fa-file-word-o fa-fw"></i>
 <span class=post-meta-item-text>字数：</span>
-<span class=leancloud-world-count>3779 字</span>
+<span class=leancloud-world-count>3777 字</span>
 </span>
 <span>
 |
@@ -388,28 +388,27 @@ LUALIB_API void (luaL_unref) (lua_State *L, int t, int ref);
 <h3 id=lua调用c函数>lua调用C函数</h3>
 <p>编写脚本时,我们可以使用5个函数库: Card 库，Group 库，Effect 库，Duel 库以及 Auxiliary 库</p>
 <p>其中Auxiliary库是一个需要加载的lua文件,其余4个全部都是调用的C++函数,是写死在ocgcore中的.</p>
-<p>拿一个最短的Duel库来举例:
-``
-static const struct luaL_Reg debuglib[] = {
-{ &ldquo;Message&rdquo;, scriptlib::debug_message },
-{ &ldquo;AddCard&rdquo;, scriptlib::debug_add_card },
-{ &ldquo;SetPlayerInfo&rdquo;, scriptlib::debug_set_player_info },
-{ &ldquo;PreSummon&rdquo;, scriptlib::debug_pre_summon },
-{ &ldquo;PreEquip&rdquo;, scriptlib::debug_pre_equip },
-{ &ldquo;PreSetTarget&rdquo;, scriptlib::debug_pre_set_target },
-{ &ldquo;PreAddCounter&rdquo;, scriptlib::debug_pre_add_counter },
-{ &ldquo;ReloadFieldBegin&rdquo;, scriptlib::debug_reload_field_begin },
-{ &ldquo;ReloadFieldEnd&rdquo;, scriptlib::debug_reload_field_end },
-{ &ldquo;SetAIName&rdquo;, scriptlib::debug_set_ai_name },
-{ &ldquo;ShowHint&rdquo;, scriptlib::debug_show_hint },
-{ NULL, NULL }
+<p>拿一个最短的Duel库来举例:</p>
+<div class=highlight><pre tabindex=0 style=background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-fallback data-lang=fallback>static const struct luaL_Reg debuglib[] = {
+	{ &#34;Message&#34;, scriptlib::debug_message },
+	{ &#34;AddCard&#34;, scriptlib::debug_add_card },
+	{ &#34;SetPlayerInfo&#34;, scriptlib::debug_set_player_info },
+	{ &#34;PreSummon&#34;, scriptlib::debug_pre_summon },
+	{ &#34;PreEquip&#34;, scriptlib::debug_pre_equip },
+	{ &#34;PreSetTarget&#34;, scriptlib::debug_pre_set_target },
+	{ &#34;PreAddCounter&#34;, scriptlib::debug_pre_add_counter },
+	{ &#34;ReloadFieldBegin&#34;, scriptlib::debug_reload_field_begin },
+	{ &#34;ReloadFieldEnd&#34;, scriptlib::debug_reload_field_end },
+	{ &#34;SetAIName&#34;, scriptlib::debug_set_ai_name },
+	{ &#34;ShowHint&#34;, scriptlib::debug_show_hint },
+	{ NULL, NULL }
 };
 void scriptlib::open_debuglib(lua_State *L) {
-luaL_newlib(L, debuglib);
-lua_setglobal(L, &ldquo;Debug&rdquo;);
-}</p>
-<p>``
-可以看出来:这些函数确实是"Debug"里的一个普通字符串.调用方法是Debug.XXXXXX</p>
+	luaL_newlib(L, debuglib);
+	lua_setglobal(L, &#34;Debug&#34;);
+}
+
+</code></pre></div><p>可以看出来:这些函数确实是"Debug"里的一个普通字符串.调用方法是Debug.XXXXXX</p>
 <p>编写卡片脚本看见拿不准的函数时,可以去看一下对应的C++函数具体都干了些什么.</p>
 <p>也可以自己添加新的函数,便于自己使用.</p>
 </div>
