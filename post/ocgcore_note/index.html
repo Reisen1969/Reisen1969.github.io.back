@@ -4,14 +4,14 @@
 <meta http-equiv=x-ua-compatible content="IE=edge,chrome=1">
 <meta name=viewport content="width=device-width,initial-scale=1,maximum-scale=1">
 <meta http-equiv=content-security-policy content="upgrade-insecure-requests">
-<title> 关于我 - rayrain's blog </title>
+<title> ocgcore随记 - rayrain's blog </title>
 <meta name=keywords content="righteoux">
 <meta name=author content="rayrain">
-<meta property="og:title" content="关于我">
+<meta property="og:title" content="ocgcore随记">
 <meta property="og:site_name" content="rayrain's blog">
 <meta property="og:image" content="/img/author.jpg">
-<meta name=title content="关于我 - rayrain's blog">
-<meta name=description content="Hugo，世界上最快的网站建设框架">
+<meta name=title content="ocgcore随记 - rayrain's blog">
+<meta name=description content="about ygopro">
 <link rel="shortcut icon" href=/img/favicon.ico>
 <link rel=apple-touch-icon href=/img/apple-touch-icon.png>
 <link rel=apple-touch-icon-precomposed href=/img/apple-touch-icon.png>
@@ -36,8 +36,6 @@
 <div class=multi-lang-switch>
 <i class="fa fa-fw fa-language" style=margin-right:5px></i>
 <a class=lang-link id=zh-cn href=#>中文</a>
-<span class=lang-line> / </span>
-<a class=lang-link id=en href=http://rayrain.xyz/en/about.html>English</a>
 </div>
 <div class=custom-logo-site-title>
 <a href=/ class=brand rel=start>
@@ -66,7 +64,7 @@
 <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>归档
 </a>
 </li>
-<li class="menu-item menu-item-active">
+<li class=menu-item>
 <a href=/about.html rel=section>
 <i class="menu-item-icon fa fa-fw fa-user"></i> <br>关于我
 </a>
@@ -102,16 +100,125 @@
 <section id=posts class=posts-expand>
 <article class="post post-type-normal" itemscope itemtype=http://schema.org/Article>
 <header class=post-header>
-<h1 class=post-title itemprop="name headline" style=font-weight:700>
-<a class=post-title-link href=http://rayrain.xyz/about.html itemprop=url>
-关于我
+<h1 class=post-title itemprop="name headline">
+<a class=post-title-link href=http://rayrain.xyz/post/ocgcore_note/ itemprop=url>
+ocgcore随记
 </a>
 </h1>
+<div class=post-meta>
+<span class=post-time>
+<i class="fa fa-calendar-o fa-fw"></i>
+<span class=post-meta-item-text>时间：</span>
+<time itemprop=dateCreated datetime=2016-03-22T13:04:35+08:00 content="2022-01-19">
+2022-01-19
+</time>
+</span>
+<span>
+|
+<i class="fa fa-file-word-o fa-fw"></i>
+<span class=post-meta-item-text>字数：</span>
+<span class=leancloud-world-count>487 字</span>
+</span>
+<span>
+|
+<i class="fa fa-eye fa-fw"></i>
+<span class=post-meta-item-text>阅读：</span>
+<span class=leancloud-view-count>1分钟</span>
+</span>
+<span id=/post/ocgcore_note/ class=leancloud_visitors data-flag-title=ocgcore随记>
+|
+<i class="fa fa-binoculars fa-fw"></i>
+<span class=post-meta-item-text>阅读次数：</span>
+<span class=leancloud-visitors-count></span>
+</span>
+</div>
 </header>
 <div class=post-body itemprop=articleBody>
-<p>a righteoux</p>
+<h2 id=ocgcore的几个模块>ocgcore的几个模块</h2>
+<h3 id=interpreter>interpreter</h3>
+<p>负责处理lua的一切事务 运行lua函数</p>
+<p>管理了一个协程映射,<code>&lt;func_ref,luas_tate></code></p>
+<p>注册卡片 注册效果 注册卡片组 等等到lua注册表里面</p>
+<h2 id=函数>函数</h2>
+<h3 id=函数的存在形式>函数的存在形式</h3>
+<p>函数主要是指的是 卡片脚本中自定义的函数. condition target cost operation等.</p>
+<p>当运行<code>interpreter::register_card</code>时,</p>
+<p>会运行每个脚本特有的<code>initial_effect</code>函数,将<code>condition</code> <code>target</code> <code>cost</code> <code>operation</code>等函数注册到注册表里,</p>
+<p>并把相应的ref值交给effect保管</p>
+<h3 id=这些函数如何运行>这些函数如何运行</h3>
+<p>这些函数是通过协程运行的,调用<code>call_coroutine</code>函数.</p>
+<h3 id=函数的参数>函数的参数</h3>
+<p>传入参数存储在</p>
+<p><code>std::list&lt;std::pair&lt;void*, uint32>> params</code> 中,</p>
+<p>其中frist是参数,因为要传入lua,所以用void*表示</p>
+<p>second是参数的类型.</p>
+<div class=highlight><pre tabindex=0 style=background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-fallback data-lang=fallback>#define	PARAM_TYPE_INT		0x01
+#define	PARAM_TYPE_STRING	0x02
+#define	PARAM_TYPE_CARD		0x04
+#define	PARAM_TYPE_GROUP	0x08
+#define PARAM_TYPE_EFFECT	0x10
+#define	PARAM_TYPE_FUNCTION	0x20
+#define PARAM_TYPE_BOOLEAN	0x40
+#define PARAM_TYPE_INDEX	0x80
+</code></pre></div><h2 id=process>process</h2>
+<p><code>field::process()</code>的作用是处理一个单元块step,返回bufferlen</p>
+<p><code>extern "C" DECL_DLLEXPORT int32 process</code>调用上者,如果没有返回值,就一致循环的调用,如果有返回值,就停止循环,交给ygopro处理.</p>
+<p>ygopro会一直持续的交替运行 <code>process</code> <code>SinglePlayAnalyze</code></p>
 </div>
 <footer class=post-footer>
+<div class=post-tags>
+<a href=/tags/ygopro rel=tag title=ygopro>#ygopro#</a>
+<a href=/tags/%e6%9c%aa%e6%95%b4%e7%90%86 rel=tag title=未整理>#未整理#</a>
+</div>
+<div class=post-nav>
+<div class=article-copyright>
+<div class=article-copyright-img>
+<img src=/img/qq_qrcode.png width=129px height=129px>
+<div style=text-align:center>QQ扫一扫交流</div>
+</div>
+<div class=article-copyright-info>
+<p>
+<span>声明：</span>ocgcore随记
+</p>
+<p>
+<span>链接：</span>http://rayrain.xyz/post/ocgcore_note/
+</p>
+<p>
+<span>作者：</span>rayrain
+</p>
+<p>
+<span>声明： </span>本博客文章除特别声明外，均采用 <a href=https://creativecommons.org/licenses/by-nc-sa/3.0/ target=_blank style=text-decoration:underline>CC BY-NC-SA 3.0</a>许可协议，转载请注明出处！
+</p>
+</div>
+</div>
+<div class=clear></div>
+</div>
+<div class=reward-qr-info>
+<div>创作实属不易，如有帮助，那就打赏博主些许茶钱吧 ^_^</div>
+<button id=rewardButton disable=enable onclick="var qr=document.getElementById('QR');qr.style.display==='none'?qr.style.display='block':qr.style.display='none'">
+<span>赏</span>
+</button>
+<div id=QR style=display:none>
+<div id=wechat style=display:inline-block>
+<img id=wechat_qr src=/img/wechat-pay.png alt="WeChat Pay">
+<p>微信打赏</p>
+</div>
+<div id=alipay style=display:inline-block>
+<img id=alipay_qr src=/img/ali-pay.png alt=Alipay>
+<p>支付宝打赏</p>
+</div>
+</div>
+</div>
+<div class=post-nav>
+<div class="post-nav-next post-nav-item">
+</div>
+<div class="post-nav-prev post-nav-item">
+<a href=http://rayrain.xyz/post/ygopro2/ rel=prev title=ygopro源码分析2:lua的使用>
+ygopro源码分析2:lua的使用
+<i class="fa fa-chevron-right"></i>
+</a>
+</div>
+</div>
 <div id=ucomments></div>
 </footer>
 </article>
@@ -127,7 +234,15 @@
 </div>
 <aside id=sidebar class=sidebar>
 <div class=sidebar-inner>
-<section class="site-overview sidebar-panel sidebar-panel-active">
+<ul class="sidebar-nav motion-element">
+<li class="sidebar-nav-toc sidebar-nav-active" data-target=post-toc-wrap>
+文章目录
+</li>
+<li class=sidebar-nav-overview data-target=site-overview>
+站点概览
+</li>
+</ul>
+<section class="site-overview sidebar-panel">
 <div class="site-author motion-element" itemprop=author itemscope itemtype=http://schema.org/Person>
 <img class=site-author-image itemprop=image src=/img/avatar.png alt=rayrain>
 <p class=site-author-name itemprop=name>rayrain</p>
@@ -194,6 +309,27 @@ a righteoux
 </ul>
 </div>
 </section>
+<section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+<div class=post-toc>
+<div class=post-toc-content><nav id=TableOfContents>
+<ul>
+<li><a href=#ocgcore的几个模块>ocgcore的几个模块</a>
+<ul>
+<li><a href=#interpreter>interpreter</a></li>
+</ul>
+</li>
+<li><a href=#函数>函数</a>
+<ul>
+<li><a href=#函数的存在形式>函数的存在形式</a></li>
+<li><a href=#这些函数如何运行>这些函数如何运行</a></li>
+<li><a href=#函数的参数>函数的参数</a></li>
+</ul>
+</li>
+<li><a href=#process>process</a></li>
+</ul>
+</nav></div>
+</div>
+</section>
 </div>
 </aside>
 </div>
@@ -246,6 +382,7 @@ Storage by
 <script src=//cdn.jsdelivr.net/npm/leancloud-storage@4.6.1/dist/av-min.js></script>
 <script type=text/javascript>function showTime(d){var b=new AV.Query(d),a=[],c=$(".leancloud_visitors");c.each(function(){a.push($(this).attr("id").trim())}),b.containedIn('url',a),b.find().then(d=>{var e='.leancloud-visitors-count',b,h,f,j,g,i;if(d.length==0){c.find(e).text(0);return}for(b=0;b<d.length;b++)h=d[b],f=h.get('url'),j=h.get('time'),g=document.getElementById(f),$(g).find(e).text(j);for(b=0;b<a.length;b++)f=a[b],g=document.getElementById(f),i=$(g).find(e),i.text()==''&&i.text(0)},a=>{console.log('Query vistors failed: '+a)})}function addCount(d){var b=$(".leancloud_visitors"),a=b.attr('id').trim(),e=b.attr('data-flag-title').trim(),c=new AV.Query('Counter');c.equalTo("url",a),c.find().then(g=>{var f,c,b;g.length>0?(f=g[0],f.increment('time',1),f.save(null,{query:new AV.Query('Counter').equalTo('url',a),fetchWhenSave:!0}).then(b=>{var c=$(document.getElementById(a));c.find('.leancloud-visitors-count').text(b.get('time'))},a=>{console.log('Update vistor failed: '+a)})):(c=new AV.ACL,c.setPublicReadAccess(!0),c.setPublicWriteAccess(!0),b=new d,b.set("title",e),b.set("url",a),b.set("time",1),b.setACL(c),b.save().then(d=>{var c=$(document.getElementById(a));c.find('.leancloud-visitors-count').text(b.get('time'))},a=>{console.log("Save new vistor failed: "+a)}))})}$(function(){AV.init({appId:"",appKey:"",serverURL:""});const a=AV.Object.extend("Counter");$('.leancloud_visitors').length==1?addCount(a):$('.post-title-link').length>1&&showTime(a)})</script>
 <script type=text/javascript>(function(){var a=document.createElement('script');a.type='text/javascript',a.async=!0,a.setAttribute('issue-term',"pathname"),a.setAttribute('theme',"github-light"),a.setAttribute('repo',"Reisen1969/Reisen1969.github.io"),a.crossorigin='anonymous',a.src='https://utteranc.es/client.js',document.getElementById('ucomments').appendChild(a)})()</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.2/MathJax.js?config=TeX-MML-AM_SVG"></script>
 <script>(function(){var a=document.createElement('script'),c=window.location.protocol.split(':')[0],b;c==='https'?a.src='https://zz.bdstatic.com/linksubmit/push.js':a.src='http://push.zhanzhang.baidu.com/push.js',b=document.getElementsByTagName("script")[0],b.parentNode.insertBefore(a,b)})()</script>
 </body>
 </html>

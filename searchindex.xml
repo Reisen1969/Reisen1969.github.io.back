@@ -1,4 +1,28 @@
-<?xml version="1.0" encoding="utf-8" standalone="yes"?><search><entry><title>ygopro源码分析2:lua的使用</title><url>http://rayrain.xyz/post/ygopro2/</url><categories/><tags><tag>ygopro</tag></tags><content type="html"> lua简介 lua是一门嵌入式的脚本语言,其存在的意义就是给C/C++等高级语言打下手,当一个好配角.
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><search><entry><title>hspro随记</title><url>http://rayrain.xyz/hspro_note/</url><categories/><tags><tag>ygopro</tag><tag>未整理</tag><tag>hspro</tag></tags><content type="html"> 我特别喜欢高桥和希的&lt;游戏王>这部作品,这部作品非常精彩,初代漫画我看了起码有10遍了.
+所以在我第一次接触到炉石传说时,我已经玩了2年的ygopro了;
+btw,ygopro最开始的名字其实是这个:ygocore
+从我第一次玩到炉石传说的时候,我就想着能不能有一个类似ygopro的软件来模拟炉石传说.但这显然是不可能的.因为Yu-Gi-Oh是科乐美发行的实体纸牌游戏,ygopro并不会直接影响到科乐美卖纸牌,相反,ygopro还能为Yu-Gi-Oh免费宣传.
+但炉石传说就不一样了,炉石传说的世界里充满了随机,只能是一个TCG网络游戏,如果谁要开个免费的私服,那属于是侵权行为了.
+但是还真有人去做这个事情了,HearthSim直球叫"炉石传说模拟器",C#做的,已经停更有一段时间了. 画风是这样的 在中文社区,玩家们更喜欢的是DIY卡片,比如这张&lt;睿智杀手蟹>经常在各路DIY的帖子下面出现.
+于是我就萌生了制作"针对于DIY玩家的炉石模拟器"的想法.
+因为Yu-Gi-Oh要远远比炉石传说复杂,我决定基于ygopro来制作.出于对ygopro的致敬,这个项目名为 hspro
+hspro 的目标:
+脚本决定一切 卡片 关键字 规则 技能都由脚本决定
+局域网联机对战 卡片编号</content></entry><entry><title>ocgcore随记</title><url>http://rayrain.xyz/post/ocgcore_note/</url><categories/><tags><tag>ygopro</tag><tag>未整理</tag></tags><content type="html"> ocgcore的几个模块 interpreter 负责处理lua的一切事务 运行lua函数
+管理了一个协程映射,&lt;func_ref,luas_tate>
+注册卡片 注册效果 注册卡片组 等等到lua注册表里面
+函数 函数的存在形式 函数主要是指的是 卡片脚本中自定义的函数. condition target cost operation等.
+当运行interpreter::register_card时,
+会运行每个脚本特有的initial_effect函数,将condition target cost operation等函数注册到注册表里,
+并把相应的ref值交给effect保管
+这些函数如何运行 这些函数是通过协程运行的,调用call_coroutine函数.
+函数的参数 传入参数存储在
+std::list&lt;std::pair&lt;void*, uint32>> params 中,
+其中frist是参数,因为要传入lua,所以用void*表示
+second是参数的类型.
+#define PARAM_TYPE_INT 0x01 #define PARAM_TYPE_STRING 0x02 #define PARAM_TYPE_CARD 0x04 #define PARAM_TYPE_GROUP 0x08 #define PARAM_TYPE_EFFECT 0x10 #define PARAM_TYPE_FUNCTION 0x20 #define PARAM_TYPE_BOOLEAN 0x40 #define PARAM_TYPE_INDEX 0x80 process field::process()的作用是处理一个单元块step,返回bufferlen
+extern "C" DECL_DLLEXPORT int32 process调用上者,如果没有返回值,就一致循环的调用,如果有返回值,就停止循环,交给ygopro处理.
+ygopro会一直持续的交替运行 process SinglePlayAnalyze</content></entry><entry><title>ygopro源码分析2:lua的使用</title><url>http://rayrain.xyz/post/ygopro2/</url><categories/><tags><tag>ygopro</tag></tags><content type="html"> lua简介 lua是一门嵌入式的脚本语言,其存在的意义就是给C/C++等高级语言打下手,当一个好配角.
 对于C/C++来说,lua的作用主要体现在:在C/C++程序没有重新编译,甚至没有重启的情况下,只通过改变lua脚本的内容,令C/C++程序做出不一样的行为,本文中以C语言为例.
 一些有用的链接,全部啃完就能成为lua中级高手了.
 lua菜鸟教程
