@@ -1,111 +1,24 @@
-<!doctype html><html lang=zh-cn dir=content/zh-cn>
-<head>
-<meta charset=utf-8>
-<meta http-equiv=x-ua-compatible content="IE=edge,chrome=1">
-<meta name=viewport content="width=device-width,initial-scale=1,maximum-scale=1">
-<meta http-equiv=content-security-policy content="upgrade-insecure-requests">
-<title> qemu梳理(riscv64用户模式) - rayrain's blog </title><meta name=keywords content="righteoux">
-<meta name=author content="rayrain">
-<meta property="og:title" content="qemu梳理(riscv64用户模式)">
-<meta property="og:site_name" content="rayrain's blog">
-<meta property="og:image" content="/img/author.jpg">
-<meta name=title content="qemu梳理(riscv64用户模式) - rayrain's blog">
-<meta name=description content="qemu">
-<link rel="shortcut icon" href=/img/favicon.ico>
-<link rel=apple-touch-icon href=/img/apple-touch-icon.png>
-<link rel=apple-touch-icon-precomposed href=/img/apple-touch-icon.png>
-<link href=//cdn.bootcdn.net/ajax/libs/font-awesome/4.6.2/css/font-awesome.min.css rel=stylesheet type=text/css>
-<link href=//cdn.bootcdn.net/ajax/libs/imageviewer/0.1.0/viewer.min.css rel=stylesheet>
-<link href=/css/main.css rel=stylesheet type=text/css>
-<link href=/css/syntax.css rel=stylesheet type=text/css>
-</head><body itemscope itemtype=http://schema.org/WebPage lang=zh-hans>
-<div class="container one-collumn sidebar-position-left page-home">
-<div class=headband></div><header id=header class=header itemscope itemtype=http://schema.org/WPHeader>
-<div class=header-inner> <div class=site-brand-container>
-<div class=site-nav-toggle>
-<div class=toggle role=button style=opacity:1;top:0>
+<!doctype html><html lang=zh-cn dir=content/zh-cn><head><meta charset=utf-8><meta http-equiv=x-ua-compatible content="IE=edge,chrome=1"><meta name=viewport content="width=device-width,initial-scale=1,maximum-scale=1"><meta http-equiv=content-security-policy content="upgrade-insecure-requests"><title>qemu梳理(riscv64用户模式) - rayrain's blog</title><meta name=keywords content="righteoux"><meta name=author content="rayrain"><meta property="og:title" content="qemu梳理(riscv64用户模式)"><meta property="og:site_name" content="rayrain's blog"><meta property="og:image" content="/img/author.jpg"><meta name=title content="qemu梳理(riscv64用户模式) - rayrain's blog"><meta name=description content="qemu"><link rel="shortcut icon" href=/img/favicon.ico><link rel=apple-touch-icon href=/img/apple-touch-icon.png><link rel=apple-touch-icon-precomposed href=/img/apple-touch-icon.png><link href=//cdn.bootcdn.net/ajax/libs/font-awesome/4.6.2/css/font-awesome.min.css rel=stylesheet type=text/css><link href=//cdn.bootcdn.net/ajax/libs/imageviewer/0.1.0/viewer.min.css rel=stylesheet><link href=/css/main.css rel=stylesheet type=text/css><link href=/css/syntax.css rel=stylesheet type=text/css></head><body itemscope itemtype=http://schema.org/WebPage lang=zh-hans><div class="container one-collumn sidebar-position-left page-home"><div class=headband></div><header id=header class=header itemscope itemtype=http://schema.org/WPHeader><div class=header-inner><div class=site-brand-container><div class=site-nav-toggle><div class=toggle role=button style=opacity:1;top:0><span class=toggle-line></span>
 <span class=toggle-line></span>
-<span class=toggle-line></span>
-<span class=toggle-line></span>
-</div></div><div class=site-meta>
-<div class=multi-lang-switch>
-<i class="fa fa-fw fa-language" style=margin-right:5px></i>
-<a class=lang-link id=zh-cn href=#>中文</a>
-</div><div class=custom-logo-site-title>
-<a href=/ class=brand rel=start>
-<span class=logo-line-before><i></i></span>
+<span class=toggle-line></span></div></div><div class=site-meta><div class=multi-lang-switch><i class="fa fa-fw fa-language" style=margin-right:5px></i>
+<a class=lang-link id=zh-cn href=#>中文</a></div><div class=custom-logo-site-title><a href=/ class=brand rel=start><span class=logo-line-before><i></i></span>
 <span class=site-title>rayrain's blog</span>
-<span class=logo-line-after><i></i></span>
-</a>
-</div><p class=site-subtitle></p></div><div class=site-nav-right>
-<div class="toggle popup-trigger" style=opacity:1;top:0>
-<i class="fa fa-search fa-fw fa-lg"></i>
-</div></div></div><nav class=site-nav>
-<ul id=menu class=menu>
-<li class=menu-item>
-<a href=/ rel=section>
-<i class="menu-item-icon fa fa-fw fa-home"></i> <br>首页
-</a>
-</li><li class=menu-item>
-<a href=/post rel=section>
-<i class="menu-item-icon fa fa-fw fa-archive"></i> <br>归档
-</a>
-</li><li class=menu-item>
-<a href=/about.html rel=section>
-<i class="menu-item-icon fa fa-fw fa-user"></i> <br>关于我
-</a>
-</li><li class=menu-item>
-<a href=/404.html rel=section>
-<i class="menu-item-icon fa fa-fw fa-heartbeat"></i> <br>公益404
-</a>
-</li><li class="menu-item menu-item-search">
-<a href=javascript:; class=popup-trigger> <i class="menu-item-icon fa fa-search fa-fw"></i> <br> 搜索</a>
-</li></ul><div class=site-search>
-<div class="popup search-popup local-search-popup">
-<div class="local-search-header clearfix">
-<span class=search-icon><i class="fa fa-search"></i> </span>
-<span class=popup-btn-close><i class="fa fa-times-circle"></i></span>
-<div class=local-search-input-wrapper>
-<input autocomplete=off placeholder=搜索关键字... spellcheck=false type=text id=local-search-input autocapitalize=none autocorrect=off>
-</div></div><div id=local-search-result></div></div></div></nav></div></header><main id=main class=main>
-<div class=main-inner>
-<div class=content-wrap>
-<div id=content class=content>
-<section id=posts class=posts-expand>
-<article class="post post-type-normal" itemscope itemtype=http://schema.org/Article>
-<header class=post-header>
-<h1 class=post-title itemprop="name headline">
-<a class=post-title-link href=http://rayrain.xyz/post/qemu0/ itemprop=url>
-qemu梳理(riscv64用户模式)
-</a>
-</h1><div class=post-meta>
-<span class=post-time>
-<i class="fa fa-calendar-o fa-fw"></i>
+<span class=logo-line-after><i></i></span></a></div><p class=site-subtitle></p></div><div class=site-nav-right><div class="toggle popup-trigger" style=opacity:1;top:0><i class="fa fa-search fa-fw fa-lg"></i></div></div></div><nav class=site-nav><ul id=menu class=menu><li class=menu-item><a href=/ rel=section><i class="menu-item-icon fa fa-fw fa-home"></i><br>首页</a></li><li class=menu-item><a href=/post rel=section><i class="menu-item-icon fa fa-fw fa-archive"></i><br>归档</a></li><li class=menu-item><a href=/about.html rel=section><i class="menu-item-icon fa fa-fw fa-user"></i><br>关于我</a></li><li class=menu-item><a href=/404.html rel=section><i class="menu-item-icon fa fa-fw fa-heartbeat"></i><br>公益404</a></li><li class="menu-item menu-item-search"><a href=javascript:; class=popup-trigger><i class="menu-item-icon fa fa-search fa-fw"></i><br>搜索</a></li></ul><div class=site-search><div class="popup search-popup local-search-popup"><div class="local-search-header clearfix"><span class=search-icon><i class="fa fa-search"></i></span>
+<span class=popup-btn-close><i class="fa fa-times-circle"></i></span><div class=local-search-input-wrapper><input autocomplete=off placeholder=搜索关键字... spellcheck=false type=text id=local-search-input autocapitalize=none autocorrect=off></div></div><div id=local-search-result></div></div></div></nav></div></header><main id=main class=main><div class=main-inner><div class=content-wrap><div id=content class=content><section id=posts class=posts-expand><article class="post post-type-normal" itemscope itemtype=http://schema.org/Article><header class=post-header><h1 class=post-title itemprop="name headline"><a class=post-title-link href=http://rayrain.xyz/post/qemu0/ itemprop=url>qemu梳理(riscv64用户模式)</a></h1><div class=post-meta><span class=post-time><i class="fa fa-calendar-o fa-fw"></i>
 <span class=post-meta-item-text>时间：</span>
-<time itemprop=dateCreated datetime=2016-03-22T13:04:35+08:00 content="2022-04-09">
-2022-04-09
-</time>
-</span>
-<span>
-|
+<time itemprop=dateCreated datetime=2016-03-22T13:04:35+08:00 content="2022-04-09">2022-04-09</time></span>
+<span>|
 <i class="fa fa-file-word-o fa-fw"></i>
 <span class=post-meta-item-text>字数：</span>
-<span class=leancloud-world-count>1353 字</span>
-</span>
-<span>
-|
+<span class=leancloud-world-count>1934 字</span></span>
+<span>|
 <i class="fa fa-eye fa-fw"></i>
 <span class=post-meta-item-text>阅读：</span>
-<span class=leancloud-view-count>3分钟</span>
-</span>
-<span id=/post/qemu0/ class=leancloud_visitors data-flag-title=qemu梳理(riscv64用户模式)>
-|
+<span class=leancloud-view-count>4分钟</span></span>
+<span id=/post/qemu0/ class=leancloud_visitors data-flag-title=qemu梳理(riscv64用户模式)>|
 <i class="fa fa-binoculars fa-fw"></i>
 <span class=post-meta-item-text>阅读次数：</span>
-<span class=leancloud-visitors-count></span>
-</span>
-</div></header><div class=post-body itemprop=articleBody>
-<h2 id=函数执行流程>函数执行流程</h2><div class=highlight><pre tabindex=0 style=background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-fallback data-lang=fallback><span style=display:flex><span>main
+<span class=leancloud-visitors-count></span></span></div></header><div class=post-body itemprop=articleBody><h2 id=函数执行流程>函数执行流程</h2><div class=highlight><pre tabindex=0 style=background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-fallback data-lang=fallback><span style=display:flex><span>main
 </span></span><span style=display:flex><span>	cpu_loop
 </span></span><span style=display:flex><span>		cpu_exec
 </span></span><span style=display:flex><span>			tb_gen_code
@@ -152,7 +65,7 @@ qemu梳理(riscv64用户模式)
 </span></span><span style=display:flex><span>@s       .......   ..... ..... ... ..... ....... &amp;s      imm=%imm_s %rs2 %rs1
 </span></span><span style=display:flex><span>@u       ....................      ..... ....... &amp;u      imm=%imm_u          %rd
 </span></span><span style=display:flex><span>@j       ....................      ..... ....... &amp;j      imm=%imm_j          %rd
-</span></span></code></pre></div><p>每行都是32个. 表示指令的编码格式</p><p>用空格将每部分分开</p><p>最后面的是 寄存器 和 立即数 等,它们的字段在上文中已确认</p><h3 id=详细的指令集>详细的指令集</h3><p>这部分基本上就是把指令集从官方文档中搬了过来,</p><p>python脚本会根据这些指令生成<code>trans_xxx</code>的函数声明,具体的函数定义需要自己编写.</p><h2 id=宏>宏</h2><h2 id=make_64bit_mask>MAKE_64BIT_MASK</h2><p>位于/include/qemu/bitops.h</p><div class=highlight><pre tabindex=0 style=background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-fallback data-lang=fallback><span style=display:flex><span>#define MAKE_64BIT_MASK(shift, length) \
+</span></span></code></pre></div><p>每行都是32个. 表示指令的编码格式</p><p>用空格将每部分分开</p><p>最后面的是 寄存器 和 立即数 等,它们的字段在上文中已确认</p><h3 id=详细的指令集>详细的指令集</h3><p>这部分基本上就是把指令集从官方文档中搬了过来,</p><p>python脚本会根据这些指令生成<code>trans_xxx</code>的函数声明,具体的函数定义需要自己编写.</p><h2 id=宏>宏</h2><h3 id=make_64bit_mask>MAKE_64BIT_MASK</h3><p>位于/include/qemu/bitops.h</p><div class=highlight><pre tabindex=0 style=background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-fallback data-lang=fallback><span style=display:flex><span>#define MAKE_64BIT_MASK(shift, length) \
 </span></span><span style=display:flex><span>    (((~0ULL) &gt;&gt; (64 - (length))) &lt;&lt; (shift))
 </span></span></code></pre></div><p>0ULL: unsinged long long zero 64-bit的无符号0</p><p>作用:制造一个64位的掩码,该掩码从第shift位开始,长度是length,如下:</p><div class=highlight><pre tabindex=0 style=background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-fallback data-lang=fallback><span style=display:flex><span>0000 ....0 11 .... .111 0.... 000
 </span></span><span style=display:flex><span>           |--length--|--shift---|
@@ -161,20 +74,19 @@ qemu梳理(riscv64用户模式)
 </span></span><span style=display:flex><span>    enum { R_ ## reg ## _ ## field ## _LENGTH = (length)};                \
 </span></span><span style=display:flex><span>    enum { R_ ## reg ## _ ## field ## _MASK =                             \
 </span></span><span style=display:flex><span>                                        MAKE_64BIT_MASK(shift, length)};
-</span></span></code></pre></div><p>这个宏定义了三个枚举 ,各自只有一个成员</p><p>R_reg_field_SHIFT = shift</p><p>R_reg_field_LENGTH = length</p><p>R_reg_field_MASK = 对应length和shift的掩码</p><h2 id=重要的结构体>重要的结构体</h2><h3 id=cpuarchstate>CPUArchState</h3><p>根据不同的guest,会被定义为其它名称,如:CPURISCVState</p><blockquote>
-<p>事实上,CPUArchState 被定义于 target/riscv/cpu.h, 每种guest的这个结构体都不一样</p></blockquote><div class=highlight><pre tabindex=0 style=background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-fallback data-lang=fallback><span style=display:flex><span>struct CPUArchState {
-</span></span><span style=display:flex><span>    target_ulong gpr[32];   //32个gpr寄存器,每个寄存器长32
-</span></span><span style=display:flex><span>    target_ulong gprh[32]; /* 128-bit寄存器的高64位,每个寄存器长32  */
-</span></span><span style=display:flex><span>    uint64_t fpr[32];     //32个浮点寄存器            /* assume both F and D extensions */
-</span></span><span style=display:flex><span>
-</span></span><span style=display:flex><span>    /* vector coprocessor state. */
-</span></span><span style=display:flex><span>    uint64_t vreg[32 * RV_VLEN_MAX / 64] QEMU_ALIGNED(16);
+</span></span></code></pre></div><p>这个宏定义了三个枚举 ,各自只有一个成员</p><p>R_reg_field_SHIFT = shift</p><p>R_reg_field_LENGTH = length</p><p>R_reg_field_MASK = 对应length和shift的掩码</p><h2 id=重要的结构体>重要的结构体</h2><h3 id=cpuarchstate某个arch的cpu状态>CPUArchState(某个arch的cpu状态)</h3><p>根据不同的guest,会被定义为其它名称,如:CPURISCVState</p><blockquote><p>事实上,CPUArchState 被定义于 target/riscv/cpu.h, 每种guest的这个结构体都不一样</p></blockquote><div class=highlight><pre tabindex=0 style=background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-c data-lang=c><span style=display:flex><span><span style=color:#a2f;font-weight:700>struct</span> CPUArchState {
+</span></span><span style=display:flex><span>    target_ulong gpr[<span style=color:#666>32</span>];   <span style=color:#080;font-style:italic>//32个gpr寄存器,每个寄存器长32
+</span></span></span><span style=display:flex><span><span style=color:#080;font-style:italic></span>    target_ulong gprh[<span style=color:#666>32</span>]; <span style=color:#080;font-style:italic>/* 128-bit寄存器的高64位,每个寄存器长32  */</span>
+</span></span><span style=display:flex><span>    <span style=color:#0b0;font-weight:700>uint64_t</span> fpr[<span style=color:#666>32</span>];     <span style=color:#080;font-style:italic>//32个浮点寄存器            /* assume both F and D extensions */
+</span></span></span><span style=display:flex><span><span style=color:#080;font-style:italic></span>
+</span></span><span style=display:flex><span>    <span style=color:#080;font-style:italic>/* vector coprocessor state. */</span>
+</span></span><span style=display:flex><span>    <span style=color:#0b0;font-weight:700>uint64_t</span> vreg[<span style=color:#666>32</span> <span style=color:#666>*</span> RV_VLEN_MAX <span style=color:#666>/</span> <span style=color:#666>64</span>] QEMU_ALIGNED(<span style=color:#666>16</span>);
 </span></span><span style=display:flex><span>    target_ulong vxrm;
 </span></span><span style=display:flex><span>    target_ulong vxsat;
 </span></span><span style=display:flex><span>    target_ulong vl;
 </span></span><span style=display:flex><span>    target_ulong vstart;
 </span></span><span style=display:flex><span>    target_ulong vtype;
-</span></span><span style=display:flex><span>    bool vill;
+</span></span><span style=display:flex><span>    <span style=color:#0b0;font-weight:700>bool</span> vill;
 </span></span><span style=display:flex><span>
 </span></span><span style=display:flex><span>    target_ulong pc;
 </span></span><span style=display:flex><span>    target_ulong load_res;
@@ -183,7 +95,7 @@ qemu梳理(riscv64用户模式)
 </span></span><span style=display:flex><span>    target_ulong frm;
 </span></span><span style=display:flex><span>
 </span></span><span style=display:flex><span>    target_ulong badaddr;
-</span></span><span style=display:flex><span>    uint32_t bins;
+</span></span><span style=display:flex><span>    <span style=color:#0b0;font-weight:700>uint32_t</span> bins;
 </span></span><span style=display:flex><span>
 </span></span><span style=display:flex><span>    target_ulong guest_phys_fault_addr;
 </span></span><span style=display:flex><span>
@@ -191,44 +103,44 @@ qemu梳理(riscv64用户模式)
 </span></span><span style=display:flex><span>    target_ulong bext_ver;
 </span></span><span style=display:flex><span>    target_ulong vext_ver;
 </span></span><span style=display:flex><span>
-</span></span><span style=display:flex><span>    /* RISCVMXL, but uint32_t for vmstate migration */
-</span></span><span style=display:flex><span>    uint32_t misa_mxl;      /* current mxl */
-</span></span><span style=display:flex><span>    uint32_t misa_mxl_max;  /* max mxl for this cpu */
-</span></span><span style=display:flex><span>    uint32_t misa_ext;      /* current extensions */
-</span></span><span style=display:flex><span>    uint32_t misa_ext_mask; /* max ext for this cpu */
-</span></span><span style=display:flex><span>    uint32_t xl;            /* current xlen */
+</span></span><span style=display:flex><span>    <span style=color:#080;font-style:italic>/* RISCVMXL, but uint32_t for vmstate migration */</span>
+</span></span><span style=display:flex><span>    <span style=color:#0b0;font-weight:700>uint32_t</span> misa_mxl;      <span style=color:#080;font-style:italic>/* current mxl */</span>
+</span></span><span style=display:flex><span>    <span style=color:#0b0;font-weight:700>uint32_t</span> misa_mxl_max;  <span style=color:#080;font-style:italic>/* max mxl for this cpu */</span>
+</span></span><span style=display:flex><span>    <span style=color:#0b0;font-weight:700>uint32_t</span> misa_ext;      <span style=color:#080;font-style:italic>/* current extensions */</span>
+</span></span><span style=display:flex><span>    <span style=color:#0b0;font-weight:700>uint32_t</span> misa_ext_mask; <span style=color:#080;font-style:italic>/* max ext for this cpu */</span>
+</span></span><span style=display:flex><span>    <span style=color:#0b0;font-weight:700>uint32_t</span> xl;            <span style=color:#080;font-style:italic>/* current xlen */</span>
 </span></span><span style=display:flex><span>
-</span></span><span style=display:flex><span>    /* 128-bit helpers upper part return value */
+</span></span><span style=display:flex><span>    <span style=color:#080;font-style:italic>/* 128-bit helpers upper part return value */</span>
 </span></span><span style=display:flex><span>    target_ulong retxh;
 </span></span><span style=display:flex><span>
-</span></span><span style=display:flex><span>    uint32_t features;
+</span></span><span style=display:flex><span>    <span style=color:#0b0;font-weight:700>uint32_t</span> features;
 </span></span><span style=display:flex><span>
-</span></span><span style=display:flex><span>#ifdef CONFIG_USER_ONLY
-</span></span><span style=display:flex><span>    uint32_t elf_flags;
-</span></span><span style=display:flex><span>#endif
-</span></span><span style=display:flex><span>
-</span></span><span style=display:flex><span>#ifndef CONFIG_USER_ONLY
-</span></span><span style=display:flex><span>    target_ulong priv;
-</span></span><span style=display:flex><span>    /* This contains QEMU specific information about the virt state. */
+</span></span><span style=display:flex><span><span style=color:#080>#ifdef CONFIG_USER_ONLY
+</span></span></span><span style=display:flex><span><span style=color:#080></span>    <span style=color:#0b0;font-weight:700>uint32_t</span> elf_flags;
+</span></span><span style=display:flex><span><span style=color:#080>#endif
+</span></span></span><span style=display:flex><span><span style=color:#080></span>
+</span></span><span style=display:flex><span><span style=color:#080>#ifndef CONFIG_USER_ONLY
+</span></span></span><span style=display:flex><span><span style=color:#080></span>    target_ulong priv;
+</span></span><span style=display:flex><span>    <span style=color:#080;font-style:italic>/* This contains QEMU specific information about the virt state. */</span>
 </span></span><span style=display:flex><span>    target_ulong virt;
 </span></span><span style=display:flex><span>    target_ulong geilen;
 </span></span><span style=display:flex><span>    target_ulong resetvec;
 </span></span><span style=display:flex><span>
 </span></span><span style=display:flex><span>    target_ulong mhartid;
-</span></span><span style=display:flex><span>    /*
-</span></span><span style=display:flex><span>     * For RV32 this is 32-bit mstatus and 32-bit mstatush.
-</span></span><span style=display:flex><span>     * For RV64 this is a 64-bit mstatus.
-</span></span><span style=display:flex><span>     */
-</span></span><span style=display:flex><span>    uint64_t mstatus;
+</span></span><span style=display:flex><span>    <span style=color:#080;font-style:italic>/*
+</span></span></span><span style=display:flex><span><span style=color:#080;font-style:italic>     * For RV32 this is 32-bit mstatus and 32-bit mstatush.
+</span></span></span><span style=display:flex><span><span style=color:#080;font-style:italic>     * For RV64 this is a 64-bit mstatus.
+</span></span></span><span style=display:flex><span><span style=color:#080;font-style:italic>     */</span>
+</span></span><span style=display:flex><span>    <span style=color:#0b0;font-weight:700>uint64_t</span> mstatus;
 </span></span><span style=display:flex><span>
-</span></span><span style=display:flex><span>    uint64_t mip;
+</span></span><span style=display:flex><span>    <span style=color:#0b0;font-weight:700>uint64_t</span> mip;
 </span></span><span style=display:flex><span>
-</span></span><span style=display:flex><span>    uint64_t miclaim;
+</span></span><span style=display:flex><span>    <span style=color:#0b0;font-weight:700>uint64_t</span> miclaim;
 </span></span><span style=display:flex><span>
-</span></span><span style=display:flex><span>    uint64_t mie;
-</span></span><span style=display:flex><span>    uint64_t mideleg;
+</span></span><span style=display:flex><span>    <span style=color:#0b0;font-weight:700>uint64_t</span> mie;
+</span></span><span style=display:flex><span>    <span style=color:#0b0;font-weight:700>uint64_t</span> mideleg;
 </span></span><span style=display:flex><span>
-</span></span><span style=display:flex><span>    target_ulong satp;   /* since: priv-1.10.0 */
+</span></span><span style=display:flex><span>    target_ulong satp;   <span style=color:#080;font-style:italic>/* since: priv-1.10.0 */</span>
 </span></span><span style=display:flex><span>    target_ulong stval;
 </span></span><span style=display:flex><span>    target_ulong medeleg;
 </span></span><span style=display:flex><span>
@@ -239,42 +151,42 @@ qemu梳理(riscv64用户模式)
 </span></span><span style=display:flex><span>    target_ulong mtvec;
 </span></span><span style=display:flex><span>    target_ulong mepc;
 </span></span><span style=display:flex><span>    target_ulong mcause;
-</span></span><span style=display:flex><span>    target_ulong mtval;  /* since: priv-1.10.0 */
+</span></span><span style=display:flex><span>    target_ulong mtval;  <span style=color:#080;font-style:italic>/* since: priv-1.10.0 */</span>
 </span></span><span style=display:flex><span>
-</span></span><span style=display:flex><span>    /* Machine and Supervisor interrupt priorities */
-</span></span><span style=display:flex><span>    uint8_t miprio[64];
-</span></span><span style=display:flex><span>    uint8_t siprio[64];
+</span></span><span style=display:flex><span>    <span style=color:#080;font-style:italic>/* Machine and Supervisor interrupt priorities */</span>
+</span></span><span style=display:flex><span>    <span style=color:#0b0;font-weight:700>uint8_t</span> miprio[<span style=color:#666>64</span>];
+</span></span><span style=display:flex><span>    <span style=color:#0b0;font-weight:700>uint8_t</span> siprio[<span style=color:#666>64</span>];
 </span></span><span style=display:flex><span>
-</span></span><span style=display:flex><span>    /* AIA CSRs */
+</span></span><span style=display:flex><span>    <span style=color:#080;font-style:italic>/* AIA CSRs */</span>
 </span></span><span style=display:flex><span>    target_ulong miselect;
 </span></span><span style=display:flex><span>    target_ulong siselect;
 </span></span><span style=display:flex><span>
-</span></span><span style=display:flex><span>    /* Hypervisor CSRs */
+</span></span><span style=display:flex><span>    <span style=color:#080;font-style:italic>/* Hypervisor CSRs */</span>
 </span></span><span style=display:flex><span>    target_ulong hstatus;
 </span></span><span style=display:flex><span>    target_ulong hedeleg;
-</span></span><span style=display:flex><span>    uint64_t hideleg;
+</span></span><span style=display:flex><span>    <span style=color:#0b0;font-weight:700>uint64_t</span> hideleg;
 </span></span><span style=display:flex><span>    target_ulong hcounteren;
 </span></span><span style=display:flex><span>    target_ulong htval;
 </span></span><span style=display:flex><span>    target_ulong htinst;
 </span></span><span style=display:flex><span>    target_ulong hgatp;
 </span></span><span style=display:flex><span>    target_ulong hgeie;
 </span></span><span style=display:flex><span>    target_ulong hgeip;
-</span></span><span style=display:flex><span>    uint64_t htimedelta;
+</span></span><span style=display:flex><span>    <span style=color:#0b0;font-weight:700>uint64_t</span> htimedelta;
 </span></span><span style=display:flex><span>
-</span></span><span style=display:flex><span>    /* Hypervisor controlled virtual interrupt priorities */
+</span></span><span style=display:flex><span>    <span style=color:#080;font-style:italic>/* Hypervisor controlled virtual interrupt priorities */</span>
 </span></span><span style=display:flex><span>    target_ulong hvictl;
-</span></span><span style=display:flex><span>    uint8_t hviprio[64];
+</span></span><span style=display:flex><span>    <span style=color:#0b0;font-weight:700>uint8_t</span> hviprio[<span style=color:#666>64</span>];
 </span></span><span style=display:flex><span>
-</span></span><span style=display:flex><span>    /* Upper 64-bits of 128-bit CSRs */
-</span></span><span style=display:flex><span>    uint64_t mscratchh;
-</span></span><span style=display:flex><span>    uint64_t sscratchh;
+</span></span><span style=display:flex><span>    <span style=color:#080;font-style:italic>/* Upper 64-bits of 128-bit CSRs */</span>
+</span></span><span style=display:flex><span>    <span style=color:#0b0;font-weight:700>uint64_t</span> mscratchh;
+</span></span><span style=display:flex><span>    <span style=color:#0b0;font-weight:700>uint64_t</span> sscratchh;
 </span></span><span style=display:flex><span>
-</span></span><span style=display:flex><span>    /* Virtual CSRs */
-</span></span><span style=display:flex><span>    /*
-</span></span><span style=display:flex><span>     * For RV32 this is 32-bit vsstatus and 32-bit vsstatush.
-</span></span><span style=display:flex><span>     * For RV64 this is a 64-bit vsstatus.
-</span></span><span style=display:flex><span>     */
-</span></span><span style=display:flex><span>    uint64_t vsstatus;
+</span></span><span style=display:flex><span>    <span style=color:#080;font-style:italic>/* Virtual CSRs */</span>
+</span></span><span style=display:flex><span>    <span style=color:#080;font-style:italic>/*
+</span></span></span><span style=display:flex><span><span style=color:#080;font-style:italic>     * For RV32 this is 32-bit vsstatus and 32-bit vsstatush.
+</span></span></span><span style=display:flex><span><span style=color:#080;font-style:italic>     * For RV64 this is a 64-bit vsstatus.
+</span></span></span><span style=display:flex><span><span style=color:#080;font-style:italic>     */</span>
+</span></span><span style=display:flex><span>    <span style=color:#0b0;font-weight:700>uint64_t</span> vsstatus;
 </span></span><span style=display:flex><span>    target_ulong vstvec;
 </span></span><span style=display:flex><span>    target_ulong vsscratch;
 </span></span><span style=display:flex><span>    target_ulong vsepc;
@@ -282,24 +194,24 @@ qemu梳理(riscv64用户模式)
 </span></span><span style=display:flex><span>    target_ulong vstval;
 </span></span><span style=display:flex><span>    target_ulong vsatp;
 </span></span><span style=display:flex><span>
-</span></span><span style=display:flex><span>    /* AIA VS-mode CSRs */
+</span></span><span style=display:flex><span>    <span style=color:#080;font-style:italic>/* AIA VS-mode CSRs */</span>
 </span></span><span style=display:flex><span>    target_ulong vsiselect;
 </span></span><span style=display:flex><span>
 </span></span><span style=display:flex><span>    target_ulong mtval2;
 </span></span><span style=display:flex><span>    target_ulong mtinst;
 </span></span><span style=display:flex><span>
-</span></span><span style=display:flex><span>    /* HS Backup CSRs */
+</span></span><span style=display:flex><span>    <span style=color:#080;font-style:italic>/* HS Backup CSRs */</span>
 </span></span><span style=display:flex><span>    target_ulong stvec_hs;
 </span></span><span style=display:flex><span>    target_ulong sscratch_hs;
 </span></span><span style=display:flex><span>    target_ulong sepc_hs;
 </span></span><span style=display:flex><span>    target_ulong scause_hs;
 </span></span><span style=display:flex><span>    target_ulong stval_hs;
 </span></span><span style=display:flex><span>    target_ulong satp_hs;
-</span></span><span style=display:flex><span>    uint64_t mstatus_hs;
+</span></span><span style=display:flex><span>    <span style=color:#0b0;font-weight:700>uint64_t</span> mstatus_hs;
 </span></span><span style=display:flex><span>
-</span></span><span style=display:flex><span>    /* Signals whether the current exception occurred with two-stage address
-</span></span><span style=display:flex><span>       translation active. */
-</span></span><span style=display:flex><span>    bool two_stage_lookup;
+</span></span><span style=display:flex><span>    <span style=color:#080;font-style:italic>/* Signals whether the current exception occurred with two-stage address
+</span></span></span><span style=display:flex><span><span style=color:#080;font-style:italic>       translation active. */</span>
+</span></span><span style=display:flex><span>    <span style=color:#0b0;font-weight:700>bool</span> two_stage_lookup;
 </span></span><span style=display:flex><span>
 </span></span><span style=display:flex><span>    target_ulong scounteren;
 </span></span><span style=display:flex><span>    target_ulong mcounteren;
@@ -307,41 +219,41 @@ qemu梳理(riscv64用户模式)
 </span></span><span style=display:flex><span>    target_ulong sscratch;
 </span></span><span style=display:flex><span>    target_ulong mscratch;
 </span></span><span style=display:flex><span>
-</span></span><span style=display:flex><span>    /* temporary htif regs */
-</span></span><span style=display:flex><span>    uint64_t mfromhost;
-</span></span><span style=display:flex><span>    uint64_t mtohost;
-</span></span><span style=display:flex><span>    uint64_t timecmp;
+</span></span><span style=display:flex><span>    <span style=color:#080;font-style:italic>/* temporary htif regs */</span>
+</span></span><span style=display:flex><span>    <span style=color:#0b0;font-weight:700>uint64_t</span> mfromhost;
+</span></span><span style=display:flex><span>    <span style=color:#0b0;font-weight:700>uint64_t</span> mtohost;
+</span></span><span style=display:flex><span>    <span style=color:#0b0;font-weight:700>uint64_t</span> timecmp;
 </span></span><span style=display:flex><span>
-</span></span><span style=display:flex><span>    /* physical memory protection */
+</span></span><span style=display:flex><span>    <span style=color:#080;font-style:italic>/* physical memory protection */</span>
 </span></span><span style=display:flex><span>    pmp_table_t pmp_state;
 </span></span><span style=display:flex><span>    target_ulong mseccfg;
 </span></span><span style=display:flex><span>
-</span></span><span style=display:flex><span>    /* machine specific rdtime callback */
-</span></span><span style=display:flex><span>    uint64_t (*rdtime_fn)(uint32_t);
-</span></span><span style=display:flex><span>    uint32_t rdtime_fn_arg;
+</span></span><span style=display:flex><span>    <span style=color:#080;font-style:italic>/* machine specific rdtime callback */</span>
+</span></span><span style=display:flex><span>    <span style=color:#0b0;font-weight:700>uint64_t</span> (<span style=color:#666>*</span>rdtime_fn)(<span style=color:#0b0;font-weight:700>uint32_t</span>);
+</span></span><span style=display:flex><span>    <span style=color:#0b0;font-weight:700>uint32_t</span> rdtime_fn_arg;
 </span></span><span style=display:flex><span>
-</span></span><span style=display:flex><span>    /* machine specific AIA ireg read-modify-write callback */
-</span></span><span style=display:flex><span>#define AIA_MAKE_IREG(__isel, __priv, __virt, __vgein, __xlen) \
-</span></span><span style=display:flex><span>    ((((__xlen) &amp; 0xff) &lt;&lt; 24) | \
-</span></span><span style=display:flex><span>     (((__vgein) &amp; 0x3f) &lt;&lt; 20) | \
-</span></span><span style=display:flex><span>     (((__virt) &amp; 0x1) &lt;&lt; 18) | \
-</span></span><span style=display:flex><span>     (((__priv) &amp; 0x3) &lt;&lt; 16) | \
-</span></span><span style=display:flex><span>     (__isel &amp; 0xffff))
-</span></span><span style=display:flex><span>#define AIA_IREG_ISEL(__ireg)                  ((__ireg) &amp; 0xffff)
-</span></span><span style=display:flex><span>#define AIA_IREG_PRIV(__ireg)                  (((__ireg) &gt;&gt; 16) &amp; 0x3)
-</span></span><span style=display:flex><span>#define AIA_IREG_VIRT(__ireg)                  (((__ireg) &gt;&gt; 18) &amp; 0x1)
-</span></span><span style=display:flex><span>#define AIA_IREG_VGEIN(__ireg)                 (((__ireg) &gt;&gt; 20) &amp; 0x3f)
-</span></span><span style=display:flex><span>#define AIA_IREG_XLEN(__ireg)                  (((__ireg) &gt;&gt; 24) &amp; 0xff)
-</span></span><span style=display:flex><span>    int (*aia_ireg_rmw_fn[4])(void *arg, target_ulong reg,
-</span></span><span style=display:flex><span>        target_ulong *val, target_ulong new_val, target_ulong write_mask);
-</span></span><span style=display:flex><span>    void *aia_ireg_rmw_fn_arg[4];
+</span></span><span style=display:flex><span>    <span style=color:#080;font-style:italic>/* machine specific AIA ireg read-modify-write callback */</span>
+</span></span><span style=display:flex><span><span style=color:#080>#define AIA_MAKE_IREG(__isel, __priv, __virt, __vgein, __xlen) \
+</span></span></span><span style=display:flex><span><span style=color:#080>    ((((__xlen) &amp; 0xff) &lt;&lt; 24) | \
+</span></span></span><span style=display:flex><span><span style=color:#080>     (((__vgein) &amp; 0x3f) &lt;&lt; 20) | \
+</span></span></span><span style=display:flex><span><span style=color:#080>     (((__virt) &amp; 0x1) &lt;&lt; 18) | \
+</span></span></span><span style=display:flex><span><span style=color:#080>     (((__priv) &amp; 0x3) &lt;&lt; 16) | \
+</span></span></span><span style=display:flex><span><span style=color:#080>     (__isel &amp; 0xffff))
+</span></span></span><span style=display:flex><span><span style=color:#080>#define AIA_IREG_ISEL(__ireg)                  ((__ireg) &amp; 0xffff)
+</span></span></span><span style=display:flex><span><span style=color:#080>#define AIA_IREG_PRIV(__ireg)                  (((__ireg) &gt;&gt; 16) &amp; 0x3)
+</span></span></span><span style=display:flex><span><span style=color:#080>#define AIA_IREG_VIRT(__ireg)                  (((__ireg) &gt;&gt; 18) &amp; 0x1)
+</span></span></span><span style=display:flex><span><span style=color:#080>#define AIA_IREG_VGEIN(__ireg)                 (((__ireg) &gt;&gt; 20) &amp; 0x3f)
+</span></span></span><span style=display:flex><span><span style=color:#080>#define AIA_IREG_XLEN(__ireg)                  (((__ireg) &gt;&gt; 24) &amp; 0xff)
+</span></span></span><span style=display:flex><span><span style=color:#080></span>    <span style=color:#0b0;font-weight:700>int</span> (<span style=color:#666>*</span>aia_ireg_rmw_fn[<span style=color:#666>4</span>])(<span style=color:#0b0;font-weight:700>void</span> <span style=color:#666>*</span>arg, target_ulong reg,
+</span></span><span style=display:flex><span>        target_ulong <span style=color:#666>*</span>val, target_ulong new_val, target_ulong write_mask);
+</span></span><span style=display:flex><span>    <span style=color:#0b0;font-weight:700>void</span> <span style=color:#666>*</span>aia_ireg_rmw_fn_arg[<span style=color:#666>4</span>];
 </span></span><span style=display:flex><span>
-</span></span><span style=display:flex><span>    /* True if in debugger mode.  */
-</span></span><span style=display:flex><span>    bool debugger;
+</span></span><span style=display:flex><span>    <span style=color:#080;font-style:italic>/* True if in debugger mode.  */</span>
+</span></span><span style=display:flex><span>    <span style=color:#0b0;font-weight:700>bool</span> debugger;
 </span></span><span style=display:flex><span>
-</span></span><span style=display:flex><span>    /*
-</span></span><span style=display:flex><span>     * CSRs for PointerMasking extension
-</span></span><span style=display:flex><span>     */
+</span></span><span style=display:flex><span>    <span style=color:#080;font-style:italic>/*
+</span></span></span><span style=display:flex><span><span style=color:#080;font-style:italic>     * CSRs for PointerMasking extension
+</span></span></span><span style=display:flex><span><span style=color:#080;font-style:italic>     */</span>
 </span></span><span style=display:flex><span>    target_ulong mmte;
 </span></span><span style=display:flex><span>    target_ulong mpmmask;
 </span></span><span style=display:flex><span>    target_ulong mpmbase;
@@ -349,160 +261,185 @@ qemu梳理(riscv64用户模式)
 </span></span><span style=display:flex><span>    target_ulong spmbase;
 </span></span><span style=display:flex><span>    target_ulong upmmask;
 </span></span><span style=display:flex><span>    target_ulong upmbase;
-</span></span><span style=display:flex><span>#endif
-</span></span><span style=display:flex><span>    target_ulong cur_pmmask;
+</span></span><span style=display:flex><span><span style=color:#080>#endif
+</span></span></span><span style=display:flex><span><span style=color:#080></span>    target_ulong cur_pmmask;
 </span></span><span style=display:flex><span>    target_ulong cur_pmbase;
 </span></span><span style=display:flex><span>
 </span></span><span style=display:flex><span>    float_status fp_status;
 </span></span><span style=display:flex><span>
-</span></span><span style=display:flex><span>    /* Fields from here on are preserved across CPU reset. */
-</span></span><span style=display:flex><span>    QEMUTimer *timer; /* Internal timer */
+</span></span><span style=display:flex><span>    <span style=color:#080;font-style:italic>/* Fields from here on are preserved across CPU reset. */</span>
+</span></span><span style=display:flex><span>    QEMUTimer <span style=color:#666>*</span>timer; <span style=color:#080;font-style:italic>/* Internal timer */</span>
 </span></span><span style=display:flex><span>
 </span></span><span style=display:flex><span>    hwaddr kernel_addr;
 </span></span><span style=display:flex><span>    hwaddr fdt_addr;
 </span></span><span style=display:flex><span>
-</span></span><span style=display:flex><span>    /* kvm timer */
-</span></span><span style=display:flex><span>    bool kvm_timer_dirty;
-</span></span><span style=display:flex><span>    uint64_t kvm_timer_time;
-</span></span><span style=display:flex><span>    uint64_t kvm_timer_compare;
-</span></span><span style=display:flex><span>    uint64_t kvm_timer_state;
-</span></span><span style=display:flex><span>    uint64_t kvm_timer_frequency;
+</span></span><span style=display:flex><span>    <span style=color:#080;font-style:italic>/* kvm timer */</span>
+</span></span><span style=display:flex><span>    <span style=color:#0b0;font-weight:700>bool</span> kvm_timer_dirty;
+</span></span><span style=display:flex><span>    <span style=color:#0b0;font-weight:700>uint64_t</span> kvm_timer_time;
+</span></span><span style=display:flex><span>    <span style=color:#0b0;font-weight:700>uint64_t</span> kvm_timer_compare;
+</span></span><span style=display:flex><span>    <span style=color:#0b0;font-weight:700>uint64_t</span> kvm_timer_state;
+</span></span><span style=display:flex><span>    <span style=color:#0b0;font-weight:700>uint64_t</span> kvm_timer_frequency;
 </span></span><span style=display:flex><span>};
-</span></span></code></pre></div><h3 id=cpu>CPU</h3></div><footer class=post-footer>
-<div class=post-tags>
-<a href=/tags/qemu rel=tag title=qemu>#qemu#</a>
-</div><div class=post-nav>
-<div class=article-copyright>
-<div class=article-copyright-img>
-<img src=/img/qq_qrcode.png width=129px height=129px>
-<div style=text-align:center>QQ扫一扫交流</div></div><div class=article-copyright-info>
-<p>
-<span>声明：</span>qemu梳理(riscv64用户模式)
-</p><p>
-<span>链接：</span>http://rayrain.xyz/post/qemu0/
-</p><p>
-<span>作者：</span>rayrain
-</p><p>
-<span>声明： </span>本博客文章除特别声明外，均采用 <a href=https://creativecommons.org/licenses/by-nc-sa/3.0/ target=_blank style=text-decoration:underline>CC BY-NC-SA 3.0</a>许可协议，转载请注明出处！
-</p></div></div><div class=clear></div></div><div class=reward-qr-info>
-<div>创作实属不易，如有帮助，那就打赏博主些许茶钱吧 ^_^</div><button id=rewardButton disable=enable onclick='var qr=document.getElementById("QR");qr.style.display==="none"?qr.style.display="block":qr.style.display="none"'>
-<span>赏</span>
-</button>
-<div id=QR style=display:none>
-<div id=wechat style=display:inline-block>
-<img id=wechat_qr src=/img/wechat-pay.png alt="WeChat Pay">
-<p>微信打赏</p></div><div id=alipay style=display:inline-block>
-<img id=alipay_qr src=/img/ali-pay.png alt=Alipay>
-<p>支付宝打赏</p></div></div></div><div class=post-nav>
-<div class="post-nav-next post-nav-item">
-<a href=http://rayrain.xyz/post/c_order/ rel=next title=C语言运算符优先级>
-<i class="fa fa-chevron-left"></i> C语言运算符优先级
-</a>
-</div><div class="post-nav-prev post-nav-item">
-<a href=http://rayrain.xyz/post/vim/ rel=prev title=VIM技巧(持续更新)>
-VIM技巧(持续更新)
-<i class="fa fa-chevron-right"></i>
-</a>
-</div></div><div id=ucomments></div></footer></article></section></div></div><div class=sidebar-toggle>
-<div class=sidebar-toggle-line-wrap>
-<span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+</span></span></code></pre></div><h3 id=cpustate通用上的cpu状态>CPUState(通用上的CPU状态)</h3><p>里面会保存tb缓存</p><div class=highlight><pre tabindex=0 style=background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-fallback data-lang=fallback><span style=display:flex><span>struct CPUState {
+</span></span><span style=display:flex><span>    /*&lt; private &gt;*/
+</span></span><span style=display:flex><span>    DeviceState parent_obj;
+</span></span><span style=display:flex><span>    /*&lt; public &gt;*/
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>    int nr_cores;
+</span></span><span style=display:flex><span>    int nr_threads;
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>    struct QemuThread *thread;
+</span></span><span style=display:flex><span>#ifdef _WIN32
+</span></span><span style=display:flex><span>    HANDLE hThread;
+</span></span><span style=display:flex><span>#endif
+</span></span><span style=display:flex><span>    int thread_id;
+</span></span><span style=display:flex><span>    bool running, has_waiter;
+</span></span><span style=display:flex><span>    struct QemuCond *halt_cond;
+</span></span><span style=display:flex><span>    bool thread_kicked;
+</span></span><span style=display:flex><span>    bool created;
+</span></span><span style=display:flex><span>    bool stop;
+</span></span><span style=display:flex><span>    bool stopped;
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>    /* Should CPU start in powered-off state? */
+</span></span><span style=display:flex><span>    bool start_powered_off;
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>    bool unplug;
+</span></span><span style=display:flex><span>    bool crash_occurred;
+</span></span><span style=display:flex><span>    bool exit_request;
+</span></span><span style=display:flex><span>    bool in_exclusive_context;
+</span></span><span style=display:flex><span>    uint32_t cflags_next_tb;
+</span></span><span style=display:flex><span>    /* updates protected by BQL */
+</span></span><span style=display:flex><span>    uint32_t interrupt_request;
+</span></span><span style=display:flex><span>    int singlestep_enabled;
+</span></span><span style=display:flex><span>    int64_t icount_budget;
+</span></span><span style=display:flex><span>    int64_t icount_extra;
+</span></span><span style=display:flex><span>    uint64_t random_seed;
+</span></span><span style=display:flex><span>    sigjmp_buf jmp_env;
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>    QemuMutex work_mutex;
+</span></span><span style=display:flex><span>    QSIMPLEQ_HEAD(, qemu_work_item) work_list;
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>    CPUAddressSpace *cpu_ases;
+</span></span><span style=display:flex><span>    int num_ases;
+</span></span><span style=display:flex><span>    AddressSpace *as;
+</span></span><span style=display:flex><span>    MemoryRegion *memory;
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>    CPUArchState *env_ptr;
+</span></span><span style=display:flex><span>    IcountDecr *icount_decr_ptr;
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>    /* Accessed in parallel; all accesses must be atomic */
+</span></span><span style=display:flex><span>    TranslationBlock *tb_jmp_cache[TB_JMP_CACHE_SIZE];
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>    struct GDBRegisterState *gdb_regs;
+</span></span><span style=display:flex><span>    int gdb_num_regs;
+</span></span><span style=display:flex><span>    int gdb_num_g_regs;
+</span></span><span style=display:flex><span>    QTAILQ_ENTRY(CPUState) node;
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>    /* ice debug support */
+</span></span><span style=display:flex><span>    QTAILQ_HEAD(, CPUBreakpoint) breakpoints;
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>    QTAILQ_HEAD(, CPUWatchpoint) watchpoints;
+</span></span><span style=display:flex><span>    CPUWatchpoint *watchpoint_hit;
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>    void *opaque;
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>    /* In order to avoid passing too many arguments to the MMIO helpers,
+</span></span><span style=display:flex><span>     * we store some rarely used information in the CPU context.
+</span></span><span style=display:flex><span>     */
+</span></span><span style=display:flex><span>    uintptr_t mem_io_pc;
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>    /* Only used in KVM */
+</span></span><span style=display:flex><span>    int kvm_fd;
+</span></span><span style=display:flex><span>    struct KVMState *kvm_state;
+</span></span><span style=display:flex><span>    struct kvm_run *kvm_run;
+</span></span><span style=display:flex><span>    struct kvm_dirty_gfn *kvm_dirty_gfns;
+</span></span><span style=display:flex><span>    uint32_t kvm_fetch_index;
+</span></span><span style=display:flex><span>    uint64_t dirty_pages;
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>    /* Used for events with &#39;vcpu&#39; and *without* the &#39;disabled&#39; properties */
+</span></span><span style=display:flex><span>    DECLARE_BITMAP(trace_dstate_delayed, CPU_TRACE_DSTATE_MAX_EVENTS);
+</span></span><span style=display:flex><span>    DECLARE_BITMAP(trace_dstate, CPU_TRACE_DSTATE_MAX_EVENTS);
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>    DECLARE_BITMAP(plugin_mask, QEMU_PLUGIN_EV_MAX);
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>#ifdef CONFIG_PLUGIN
+</span></span><span style=display:flex><span>    GArray *plugin_mem_cbs;
+</span></span><span style=display:flex><span>    /* saved iotlb data from io_writex */
+</span></span><span style=display:flex><span>    SavedIOTLB saved_iotlb;
+</span></span><span style=display:flex><span>#endif
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>    /* TODO Move common fields from CPUArchState here. */
+</span></span><span style=display:flex><span>    int cpu_index;
+</span></span><span style=display:flex><span>    int cluster_index;
+</span></span><span style=display:flex><span>    uint32_t tcg_cflags;
+</span></span><span style=display:flex><span>    uint32_t halted;
+</span></span><span style=display:flex><span>    uint32_t can_do_io;
+</span></span><span style=display:flex><span>    int32_t exception_index;
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>    /* shared by kvm, hax and hvf */
+</span></span><span style=display:flex><span>    bool vcpu_dirty;
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>    /* Used to keep track of an outstanding cpu throttle thread for migration
+</span></span><span style=display:flex><span>     * autoconverge
+</span></span><span style=display:flex><span>     */
+</span></span><span style=display:flex><span>    bool throttle_thread_scheduled;
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>    bool ignore_memory_transaction_failures;
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>    /* Used for user-only emulation of prctl(PR_SET_UNALIGN). */
+</span></span><span style=display:flex><span>    bool prctl_unalign_sigbus;
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>    struct hax_vcpu_state *hax_vcpu;
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>    struct hvf_vcpu_state *hvf;
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>    /* track IOMMUs whose translations we&#39;ve cached in the TCG TLB */
+</span></span><span style=display:flex><span>    GArray *iommu_notifiers;
+</span></span><span style=display:flex><span>};
+</span></span></code></pre></div><h3 id=archcpu>ArchCPU</h3><p>每一种arc都有一个这样的结构体,包含了上面两个结构体</p><div class=highlight><pre tabindex=0 style=background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-fallback data-lang=fallback><span style=display:flex><span>struct ArchCPU {
+</span></span><span style=display:flex><span>    /*&lt; private &gt;*/
+</span></span><span style=display:flex><span>    CPUState parent_obj;
+</span></span><span style=display:flex><span>    /*&lt; public &gt;*/
+</span></span><span style=display:flex><span>    CPUNegativeOffsetState neg;
+</span></span><span style=display:flex><span>    CPURISCVState env;
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>    char *dyn_csr_xml;
+</span></span><span style=display:flex><span>    char *dyn_vreg_xml;
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>    /* Configuration Settings */
+</span></span><span style=display:flex><span>    RISCVCPUConfig cfg;
+</span></span><span style=display:flex><span>};
+</span></span></code></pre></div><h2 id=函数>函数</h2><h3 id=env_cpu>env_cpu</h3><p>在cpu_loop函数中调用</p><div class=highlight><pre tabindex=0 style=background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-fallback data-lang=fallback><span style=display:flex><span>/**
+</span></span><span style=display:flex><span> * env_archcpu(env)
+</span></span><span style=display:flex><span> * @env: The architecture environment
+</span></span><span style=display:flex><span> *
+</span></span><span style=display:flex><span> * Return the ArchCPU associated with the environment.
+</span></span><span style=display:flex><span> */
+</span></span><span style=display:flex><span>static inline ArchCPU *env_archcpu(CPUArchState *env)
+</span></span><span style=display:flex><span>{
+</span></span><span style=display:flex><span>    return container_of(env, ArchCPU, env);
+</span></span><span style=display:flex><span>}
+</span></span></code></pre></div><p>这个函数用于获取当前环境env的对应的CPUState</p><h2 id=随便写写>随便写写</h2><h3 id=关于tb寻找和生成>关于tb寻找和生成</h3><p><code>cpu_exec</code>函数,是主循环,在没发生异常和中断的情况下会一直执行tb块</p><p>首先会使用<code>tb_lookup</code>在缓存中根据pc值等参数在缓存中寻找下一个tb块</p><p>如果没找到,就会根据相同的参数生成新的tb块</p></div><footer class=post-footer><div class=post-tags><a href=/tags/qemu rel=tag title=qemu>#qemu#</a></div><div class=post-nav><div class=article-copyright><div class=article-copyright-img><img src=/img/qq_qrcode.png width=129px height=129px><div style=text-align:center>QQ扫一扫交流</div></div><div class=article-copyright-info><p><span>声明：</span>qemu梳理(riscv64用户模式)</p><p><span>链接：</span>http://rayrain.xyz/post/qemu0/</p><p><span>作者：</span>rayrain</p><p><span>声明： </span>本博客文章除特别声明外，均采用 <a href=https://creativecommons.org/licenses/by-nc-sa/3.0/ target=_blank style=text-decoration:underline>CC BY-NC-SA 3.0</a>许可协议，转载请注明出处！</p></div></div><div class=clear></div></div><div class=reward-qr-info><div>创作实属不易，如有帮助，那就打赏博主些许茶钱吧 ^_^</div><button id=rewardButton disable=enable onclick='var qr=document.getElementById("QR");qr.style.display==="none"?qr.style.display="block":qr.style.display="none"'>
+<span>赏</span></button><div id=QR style=display:none><div id=wechat style=display:inline-block><img id=wechat_qr src=/img/wechat-pay.png alt="WeChat Pay"><p>微信打赏</p></div><div id=alipay style=display:inline-block><img id=alipay_qr src=/img/ali-pay.png alt=Alipay><p>支付宝打赏</p></div></div></div><div class=post-nav><div class="post-nav-next post-nav-item"><a href=http://rayrain.xyz/post/c_order/ rel=next title=C语言运算符优先级><i class="fa fa-chevron-left"></i> C语言运算符优先级</a></div><div class="post-nav-prev post-nav-item"><a href=http://rayrain.xyz/post/vim/ rel=prev title=VIM技巧(持续更新)>VIM技巧(持续更新)
+<i class="fa fa-chevron-right"></i></a></div></div><div id=ucomments></div></footer></article></section></div></div><div class=sidebar-toggle><div class=sidebar-toggle-line-wrap><span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
 <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
-<span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
-</div></div><aside id=sidebar class=sidebar>
-<div class=sidebar-inner>
-<ul class="sidebar-nav motion-element">
-<li class="sidebar-nav-toc sidebar-nav-active" data-target=post-toc-wrap>
-文章目录
-</li><li class=sidebar-nav-overview data-target=site-overview>
-站点概览
-</li></ul><section class="site-overview sidebar-panel">
-<div class="site-author motion-element" itemprop=author itemscope itemtype=http://schema.org/Person>
-<img class=site-author-image itemprop=image src=/img/avatar.png alt=rayrain>
-<p class=site-author-name itemprop=name>rayrain</p><p class="site-description motion-element" itemprop=description>
-a righteoux
-</p></div><nav class="site-state motion-element">
-<div class="site-state-item site-state-posts">
-<a href=/post/>
-<span class=site-state-item-count>4</span>
-<span class=site-state-item-name>日志</span>
-</a>
-</div><div class="site-state-item site-state-categories">
-<a href=/categories/>
-<span class=site-state-item-count>0</span>
-<span class=site-state-item-name>分类</span>
-</a>
-</div><div class="site-state-item site-state-tags">
-<a href=/tags/>
-<span class=site-state-item-count>6</span>
-<span class=site-state-item-name>标签</span>
-</a>
-</div></nav><div class="tagcloud-of-blogroll motion-element tagcloud-of-blogroll-inline">
-<div class=tagcloud-of-blogroll-title>
-<i class="fa fa-fw fa-tags"></i>
-标签云
-</div><ul class=tagcloud-of-blogroll-list>
-<li class=tagcloud-of-blogroll-item>
-<a href=/tags/c>C</a>
-</li><li class=tagcloud-of-blogroll-item>
-<a href=/tags/cpp>Cpp</a>
-</li><li class=tagcloud-of-blogroll-item>
-<a href=/tags/elf>Elf</a>
-</li><li class=tagcloud-of-blogroll-item>
-<a href=/tags/linux>Linux</a>
-</li><li class=tagcloud-of-blogroll-item>
-<a href=/tags/qemu>Qemu</a>
-</li><li class=tagcloud-of-blogroll-item>
-<a href=/tags/vim>Vim</a>
-</li></ul></div></section><section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
-<div class=post-toc>
-<div class=post-toc-content><nav id=TableOfContents>
-<ul>
-<li><a href=#函数执行流程>函数执行流程</a></li><li><a href=#decode文件的内容和用途>decode文件的内容和用途</a>
-<ul>
-<li><a href=#fields字段>Fields字段</a></li><li><a href=#immediate立即数>immediate立即数</a></li><li><a href=#argument-sets参数集>Argument sets参数集</a></li><li><a href=#formats指令格式>Formats指令格式</a></li><li><a href=#详细的指令集>详细的指令集</a></li></ul></li><li><a href=#宏>宏</a></li><li><a href=#make_64bit_mask>MAKE_64BIT_MASK</a>
-<ul>
-<li><a href=#field>FIELD</a></li></ul></li><li><a href=#重要的结构体>重要的结构体</a>
-<ul>
-<li><a href=#cpuarchstate>CPUArchState</a></li><li><a href=#cpu>CPU</a></li></ul></li></ul></nav></div></div></section></div></aside></div></main><footer id=footer class=footer>
-<div class=footer-inner>
-<div class=copyright>
-<span class=copyright-year>
-&copy; 2010 - 2022
-</span>
+<span class="sidebar-toggle-line sidebar-toggle-line-last"></span></div></div><aside id=sidebar class=sidebar><div class=sidebar-inner><ul class="sidebar-nav motion-element"><li class="sidebar-nav-toc sidebar-nav-active" data-target=post-toc-wrap>文章目录</li><li class=sidebar-nav-overview data-target=site-overview>站点概览</li></ul><section class="site-overview sidebar-panel"><div class="site-author motion-element" itemprop=author itemscope itemtype=http://schema.org/Person><img class=site-author-image itemprop=image src=/img/avatar.png alt=rayrain><p class=site-author-name itemprop=name>rayrain</p><p class="site-description motion-element" itemprop=description>a righteoux</p></div><nav class="site-state motion-element"><div class="site-state-item site-state-posts"><a href=/post/><span class=site-state-item-count>4</span>
+<span class=site-state-item-name>日志</span></a></div><div class="site-state-item site-state-categories"><a href=/categories/><span class=site-state-item-count>0</span>
+<span class=site-state-item-name>分类</span></a></div><div class="site-state-item site-state-tags"><a href=/tags/><span class=site-state-item-count>6</span>
+<span class=site-state-item-name>标签</span></a></div></nav><div class="tagcloud-of-blogroll motion-element tagcloud-of-blogroll-inline"><div class=tagcloud-of-blogroll-title><i class="fa fa-fw fa-tags"></i>
+标签云</div><ul class=tagcloud-of-blogroll-list><li class=tagcloud-of-blogroll-item><a href=/tags/c>C</a></li><li class=tagcloud-of-blogroll-item><a href=/tags/cpp>Cpp</a></li><li class=tagcloud-of-blogroll-item><a href=/tags/elf>Elf</a></li><li class=tagcloud-of-blogroll-item><a href=/tags/linux>Linux</a></li><li class=tagcloud-of-blogroll-item><a href=/tags/qemu>Qemu</a></li><li class=tagcloud-of-blogroll-item><a href=/tags/vim>Vim</a></li></ul></div></section><section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active"><div class=post-toc><div class=post-toc-content><nav id=TableOfContents><ul><li><a href=#函数执行流程>函数执行流程</a></li><li><a href=#decode文件的内容和用途>decode文件的内容和用途</a><ul><li><a href=#fields字段>Fields字段</a></li><li><a href=#immediate立即数>immediate立即数</a></li><li><a href=#argument-sets参数集>Argument sets参数集</a></li><li><a href=#formats指令格式>Formats指令格式</a></li><li><a href=#详细的指令集>详细的指令集</a></li></ul></li><li><a href=#宏>宏</a><ul><li><a href=#make_64bit_mask>MAKE_64BIT_MASK</a></li><li><a href=#field>FIELD</a></li></ul></li><li><a href=#重要的结构体>重要的结构体</a><ul><li><a href=#cpuarchstate某个arch的cpu状态>CPUArchState(某个arch的cpu状态)</a></li><li><a href=#cpustate通用上的cpu状态>CPUState(通用上的CPU状态)</a></li><li><a href=#archcpu>ArchCPU</a></li></ul></li><li><a href=#函数>函数</a><ul><li><a href=#env_cpu>env_cpu</a></li></ul></li><li><a href=#随便写写>随便写写</a><ul><li><a href=#关于tb寻找和生成>关于tb寻找和生成</a></li></ul></li></ul></nav></div></div></section></div></aside></div></main><footer id=footer class=footer><div class=footer-inner><div class=copyright><span class=copyright-year>&copy; 2010 - 2022</span>
 <span class=with-love><i class="fa fa-heart"></i></span>
-<span class=copyright-author>rayrain's blog</span>
-</div><div class=powered-info>
-<span class=powered-by>
-Powered by - <a class=powered-link href=//gohugo.io target=_blank title=hugo>Hugo v0.93.2</a>
-</span>
+<span class=copyright-author>rayrain's blog</span></div><div class=powered-info><span class=powered-by>Powered by - <a class=powered-link href=//gohugo.io target=_blank title=hugo>Hugo v0.96.0</a></span>
 <span class=separator-line>/</span>
-<span class=theme-info>
-Theme by - <a class=powered-link href=//github.com/elkan1788/hugo-theme-next target=_blank> NexT
-</a>
-</span>
-</div><div class=vistor-info>
-</div><div class=license-info>
-<span class=storage-info>
-Storage by
-<a href=https://pages.github.com/ style=font-weight:700 target=_blank>Github Pages</a>
-</span>
+<span class=theme-info>Theme by - <a class=powered-link href=//github.com/elkan1788/hugo-theme-next target=_blank>NexT</a></span></div><div class=vistor-info></div><div class=license-info><span class=storage-info>Storage by
+<a href=https://pages.github.com/ style=font-weight:700 target=_blank>Github Pages</a></span>
 <span class=separator-line>/</span>
-<span class=license-num>
-<a href=https://pages.github.com/ target=_blank>Xodom</a>
-</span>
-</div></div></footer><div class=back-to-top>
-<i class="fa fa-arrow-up"></i>
-<span id=scrollpercent><span>0</span>%</span>
-</div></div><script type=text/javascript src=//cdn.bootcdn.net/ajax/libs/jquery/2.1.4/jquery.min.js></script>
+<span class=license-num><a href=https://pages.github.com/ target=_blank>Xodom</a></span></div></div></footer><div class=back-to-top><i class="fa fa-arrow-up"></i>
+<span id=scrollpercent><span>0</span>%</span></div></div><script type=text/javascript src=//cdn.bootcdn.net/ajax/libs/jquery/2.1.4/jquery.min.js></script>
 <script type=text/javascript src=/js/search.js></script>
 <script type=text/javascript src=/js/affix.js></script>
 <script type=text/javascript src=/js/scrollspy.js></script>
-<script type=text/javascript>function detectIE(){var e=window.navigator.userAgent,t=e.indexOf("MSIE "),n=e.indexOf("Trident/"),s=e.indexOf("Edge/");return t>0||n>0||s>0?-1:1}function getCntViewHeight(){var t=$("#content").height(),e=$(window).height(),n=t>e?t-e:$(document).height()-e;return n}function getScrollbarWidth(){var e=$("<div />").addClass("scrollbar-measure").prependTo("body"),t=e[0],n=t.offsetWidth-t.clientWidth;return e.remove(),n}function registerBackTop(){var t=50,e=$(".back-to-top");$(window).on("scroll",function(){e.toggleClass("back-to-top-on",window.pageYOffset>t);var s=$(window).scrollTop(),o=getCntViewHeight(),i=s/o,n=Math.round(i*100),a=n>100?100:n;$("#scrollpercent>span").html(a)}),e.on("click",function(){$("html,body").animate({scrollTop:0,screenLeft:0},800)})}function initScrollSpy(){var e=".post-toc",s=$(e),t=".active-current";s.on("activate.bs.scrollspy",function(){var t=$(e+" .active").last();n(),t.addClass("active-current")}).on("clear.bs.scrollspy",n),$("body").scrollspy({target:e});function n(){$(e+" "+t).removeClass(t.substring(1))}}function initAffix(){var e=$(".header-inner").height(),t=parseInt($(".main").css("padding-bottom"),10),n=e+10;$(".sidebar-inner").affix({offset:{top:n,bottom:t}}),$(document).on("affixed.bs.affix",function(){updateTOCHeight(document.body.clientHeight-100)})}function initTOCDimension(){$(window).on("resize",function(){e&&clearTimeout(e),e=setTimeout(function(){var e=document.body.clientHeight-100;updateTOCHeight(e)},0)}),updateTOCHeight(document.body.clientHeight-100);var e,t=getScrollbarWidth();$(".post-toc").css("width","calc(100% + "+t+"px)")}function updateTOCHeight(e){e=e||"auto",$(".post-toc").css("max-height",e)}$(function(){var t=$(".header-inner").height()+10,n,s,e,o;$("#sidebar").css({'margin-top':t}).show(),n=parseInt($("#sidebar").css("margin-top")),s=parseInt($(".sidebar-inner").css("height")),e=n+s,o=$(".content-wrap").height(),o<e&&$(".content-wrap").css("min-height",e),$(".site-nav-toggle").on("click",function(){var e=$(".site-nav"),o=$(".toggle"),t="site-nav-on",i="toggle-close",n=e.hasClass(t),a=n?"slideUp":"slideDown",s=n?"removeClass":"addClass";e.stop()[a]("normal",function(){e[s](t),o[s](i)})}),registerBackTop(),initScrollSpy(),initAffix(),initTOCDimension(),$(".sidebar-nav-toc").click(function(){$(this).addClass("sidebar-nav-active"),$(this).next().removeClass("sidebar-nav-active"),$("."+$(this).next().attr("data-target")).toggle(500),$("."+$(this).attr("data-target")).toggle(500)}),$(".sidebar-nav-overview").click(function(){$(this).addClass("sidebar-nav-active"),$(this).prev().removeClass("sidebar-nav-active"),$("."+$(this).prev().attr("data-target")).toggle(500),$("."+$(this).attr("data-target")).toggle(500)})})</script>
-<script src=//cdn.bootcdn.net/ajax/libs/imageviewer/0.1.0/viewer.min.js></script>
-<script type=text/javascript>$(function(){$(".post-body").viewer()})</script>
-<script src=//cdn.jsdelivr.net/npm/leancloud-storage@4.6.1/dist/av-min.js></script>
-<script type=text/javascript>function showTime(s){var t=new AV.Query(s),e=[],n=$(".leancloud_visitors");n.each(function(){e.push($(this).attr("id").trim())}),t.containedIn("url",e),t.find().then(s=>{var o=".leancloud-visitors-count",t,r,i,l,a,c;if(s.length==0){n.find(o).text(0);return}for(t=0;t<s.length;t++)r=s[t],i=r.get("url"),l=r.get("time"),a=document.getElementById(i),$(a).find(o).text(l);for(t=0;t<e.length;t++)i=e[t],a=document.getElementById(i),c=$(a).find(o),c.text()==''&&c.text(0)},e=>{console.log("Query vistors failed: "+e)})}function addCount(s){var t=$(".leancloud_visitors"),e=t.attr("id").trim(),o=t.attr("data-flag-title").trim(),n=new AV.Query("Counter");n.equalTo("url",e),n.find().then(i=>{if(i.length>0){var a=i[0],n,t;a.increment("time",1),a.save(null,{query:new AV.Query("Counter").equalTo("url",e),fetchWhenSave:!0}).then(t=>{var n=$(document.getElementById(e));n.find(".leancloud-visitors-count").text(t.get("time"))},e=>{console.log("Update vistor failed: "+e)})}else n=new AV.ACL,n.setPublicReadAccess(!0),n.setPublicWriteAccess(!0),t=new s,t.set("title",o),t.set("url",e),t.set("time",1),t.setACL(n),t.save().then(s=>{var n=$(document.getElementById(e));n.find(".leancloud-visitors-count").text(t.get("time"))},e=>{console.log("Save new vistor failed: "+e)})})}$(function(){AV.init({appId:"",appKey:"",serverURL:""});const e=AV.Object.extend("Counter");$(".leancloud_visitors").length==1?addCount(e):$(".post-title-link").length>1&&showTime(e)})</script>
-<script type=text/javascript>(function(){var e=document.createElement("script");e.type="text/javascript",e.async=!0,e.setAttribute("issue-term","pathname"),e.setAttribute("theme","github-light"),e.setAttribute("repo","Reisen1969/Reisen1969.github.io"),e.crossorigin="anonymous",e.src="https://utteranc.es/client.js",document.getElementById("ucomments").appendChild(e)})()</script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.2/MathJax.js?config=TeX-MML-AM_SVG"></script>
-<script>(function(){var e=document.createElement("script"),t,n=window.location.protocol.split(":")[0];n==="https"?e.src="https://zz.bdstatic.com/linksubmit/push.js":e.src="http://push.zhanzhang.baidu.com/push.js",t=document.getElementsByTagName("script")[0],t.parentNode.insertBefore(e,t)})()</script>
-</body></html>
+<script type=text/javascript>function detectIE(){var e=window.navigator.userAgent,t=e.indexOf("MSIE "),n=e.indexOf("Trident/"),s=e.indexOf("Edge/");return t>0||n>0||s>0?-1:1}function getCntViewHeight(){var t=$("#content").height(),e=$(window).height(),n=t>e?t-e:$(document).height()-e;return n}function getScrollbarWidth(){var e=$("<div />").addClass("scrollbar-measure").prependTo("body"),t=e[0],n=t.offsetWidth-t.clientWidth;return e.remove(),n}function registerBackTop(){var t=50,e=$(".back-to-top");$(window).on("scroll",function(){e.toggleClass("back-to-top-on",window.pageYOffset>t);var s=$(window).scrollTop(),o=getCntViewHeight(),i=s/o,n=Math.round(i*100),a=n>100?100:n;$("#scrollpercent>span").html(a)}),e.on("click",function(){$("html,body").animate({scrollTop:0,screenLeft:0},800)})}function initScrollSpy(){var e=".post-toc",s=$(e),t=".active-current";s.on("activate.bs.scrollspy",function(){var t=$(e+" .active").last();n(),t.addClass("active-current")}).on("clear.bs.scrollspy",n),$("body").scrollspy({target:e});function n(){$(e+" "+t).removeClass(t.substring(1))}}function initAffix(){var e=$(".header-inner").height(),t=parseInt($(".main").css("padding-bottom"),10),n=e+10;$(".sidebar-inner").affix({offset:{top:n,bottom:t}}),$(document).on("affixed.bs.affix",function(){updateTOCHeight(document.body.clientHeight-100)})}function initTOCDimension(){$(window).on("resize",function(){e&&clearTimeout(e),e=setTimeout(function(){var e=document.body.clientHeight-100;updateTOCHeight(e)},0)}),updateTOCHeight(document.body.clientHeight-100);var e,t=getScrollbarWidth();$(".post-toc").css("width","calc(100% + "+t+"px)")}function updateTOCHeight(e){e=e||"auto",$(".post-toc").css("max-height",e)}$(function(){var t=$(".header-inner").height()+10,n,s,e,o;$("#sidebar").css({'margin-top':t}).show(),n=parseInt($("#sidebar").css("margin-top")),s=parseInt($(".sidebar-inner").css("height")),e=n+s,o=$(".content-wrap").height(),o<e&&$(".content-wrap").css("min-height",e),$(".site-nav-toggle").on("click",function(){var e=$(".site-nav"),o=$(".toggle"),t="site-nav-on",i="toggle-close",n=e.hasClass(t),a=n?"slideUp":"slideDown",s=n?"removeClass":"addClass";e.stop()[a]("normal",function(){e[s](t),o[s](i)})}),registerBackTop(),initScrollSpy(),initAffix(),initTOCDimension(),$(".sidebar-nav-toc").click(function(){$(this).addClass("sidebar-nav-active"),$(this).next().removeClass("sidebar-nav-active"),$("."+$(this).next().attr("data-target")).toggle(500),$("."+$(this).attr("data-target")).toggle(500)}),$(".sidebar-nav-overview").click(function(){$(this).addClass("sidebar-nav-active"),$(this).prev().removeClass("sidebar-nav-active"),$("."+$(this).prev().attr("data-target")).toggle(500),$("."+$(this).attr("data-target")).toggle(500)})})</script><script src=//cdn.bootcdn.net/ajax/libs/imageviewer/0.1.0/viewer.min.js></script>
+<script type=text/javascript>$(function(){$(".post-body").viewer()})</script><script src=//cdn.jsdelivr.net/npm/leancloud-storage@4.6.1/dist/av-min.js></script>
+<script type=text/javascript>function showTime(s){var t=new AV.Query(s),e=[],n=$(".leancloud_visitors");n.each(function(){e.push($(this).attr("id").trim())}),t.containedIn("url",e),t.find().then(s=>{var o=".leancloud-visitors-count",t,r,i,l,a,c;if(s.length==0){n.find(o).text(0);return}for(t=0;t<s.length;t++)r=s[t],i=r.get("url"),l=r.get("time"),a=document.getElementById(i),$(a).find(o).text(l);for(t=0;t<e.length;t++)i=e[t],a=document.getElementById(i),c=$(a).find(o),c.text()==''&&c.text(0)},e=>{console.log("Query vistors failed: "+e)})}function addCount(s){var t=$(".leancloud_visitors"),e=t.attr("id").trim(),o=t.attr("data-flag-title").trim(),n=new AV.Query("Counter");n.equalTo("url",e),n.find().then(i=>{if(i.length>0){var a=i[0],n,t;a.increment("time",1),a.save(null,{query:new AV.Query("Counter").equalTo("url",e),fetchWhenSave:!0}).then(t=>{var n=$(document.getElementById(e));n.find(".leancloud-visitors-count").text(t.get("time"))},e=>{console.log("Update vistor failed: "+e)})}else n=new AV.ACL,n.setPublicReadAccess(!0),n.setPublicWriteAccess(!0),t=new s,t.set("title",o),t.set("url",e),t.set("time",1),t.setACL(n),t.save().then(s=>{var n=$(document.getElementById(e));n.find(".leancloud-visitors-count").text(t.get("time"))},e=>{console.log("Save new vistor failed: "+e)})})}$(function(){AV.init({appId:"",appKey:"",serverURL:""});const e=AV.Object.extend("Counter");$(".leancloud_visitors").length==1?addCount(e):$(".post-title-link").length>1&&showTime(e)})</script><script type=text/javascript>(function(){var e=document.createElement("script");e.type="text/javascript",e.async=!0,e.setAttribute("issue-term","pathname"),e.setAttribute("theme","github-light"),e.setAttribute("repo","Reisen1969/Reisen1969.github.io"),e.crossorigin="anonymous",e.src="https://utteranc.es/client.js",document.getElementById("ucomments").appendChild(e)})()</script><script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.2/MathJax.js?config=TeX-MML-AM_SVG"></script>
+<script>(function(){var e=document.createElement("script"),t,n=window.location.protocol.split(":")[0];n==="https"?e.src="https://zz.bdstatic.com/linksubmit/push.js":e.src="http://push.zhanzhang.baidu.com/push.js",t=document.getElementsByTagName("script")[0],t.parentNode.insertBefore(e,t)})()</script></body></html>

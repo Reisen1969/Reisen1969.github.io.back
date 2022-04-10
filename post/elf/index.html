@@ -1,115 +1,24 @@
-<!doctype html><html lang=zh-cn dir=content/zh-cn>
-<head>
-<meta charset=utf-8>
-<meta http-equiv=x-ua-compatible content="IE=edge,chrome=1">
-<meta name=viewport content="width=device-width,initial-scale=1,maximum-scale=1">
-<meta http-equiv=content-security-policy content="upgrade-insecure-requests">
-<title> 从ELF谈起 - rayrain's blog </title><meta name=keywords content="righteoux">
-<meta name=author content="rayrain">
-<meta property="og:title" content="从ELF谈起">
-<meta property="og:site_name" content="rayrain's blog">
-<meta property="og:image" content="/img/author.jpg">
-<meta name=title content="从ELF谈起 - rayrain's blog">
-<meta name=description content="elf">
-<link rel="shortcut icon" href=/img/favicon.ico>
-<link rel=apple-touch-icon href=/img/apple-touch-icon.png>
-<link rel=apple-touch-icon-precomposed href=/img/apple-touch-icon.png>
-<link href=//cdn.bootcdn.net/ajax/libs/font-awesome/4.6.2/css/font-awesome.min.css rel=stylesheet type=text/css>
-<link href=//cdn.bootcdn.net/ajax/libs/imageviewer/0.1.0/viewer.min.css rel=stylesheet>
-<link href=/css/main.css rel=stylesheet type=text/css>
-<link href=/css/syntax.css rel=stylesheet type=text/css>
-</head><body itemscope itemtype=http://schema.org/WebPage lang=zh-hans>
-<div class="container one-collumn sidebar-position-left page-home">
-<div class=headband></div><header id=header class=header itemscope itemtype=http://schema.org/WPHeader>
-<div class=header-inner> <div class=site-brand-container>
-<div class=site-nav-toggle>
-<div class=toggle role=button style=opacity:1;top:0>
+<!doctype html><html lang=zh-cn dir=content/zh-cn><head><meta charset=utf-8><meta http-equiv=x-ua-compatible content="IE=edge,chrome=1"><meta name=viewport content="width=device-width,initial-scale=1,maximum-scale=1"><meta http-equiv=content-security-policy content="upgrade-insecure-requests"><title>从ELF谈起 - rayrain's blog</title><meta name=keywords content="righteoux"><meta name=author content="rayrain"><meta property="og:title" content="从ELF谈起"><meta property="og:site_name" content="rayrain's blog"><meta property="og:image" content="/img/author.jpg"><meta name=title content="从ELF谈起 - rayrain's blog"><meta name=description content="elf"><link rel="shortcut icon" href=/img/favicon.ico><link rel=apple-touch-icon href=/img/apple-touch-icon.png><link rel=apple-touch-icon-precomposed href=/img/apple-touch-icon.png><link href=//cdn.bootcdn.net/ajax/libs/font-awesome/4.6.2/css/font-awesome.min.css rel=stylesheet type=text/css><link href=//cdn.bootcdn.net/ajax/libs/imageviewer/0.1.0/viewer.min.css rel=stylesheet><link href=/css/main.css rel=stylesheet type=text/css><link href=/css/syntax.css rel=stylesheet type=text/css></head><body itemscope itemtype=http://schema.org/WebPage lang=zh-hans><div class="container one-collumn sidebar-position-left page-home"><div class=headband></div><header id=header class=header itemscope itemtype=http://schema.org/WPHeader><div class=header-inner><div class=site-brand-container><div class=site-nav-toggle><div class=toggle role=button style=opacity:1;top:0><span class=toggle-line></span>
 <span class=toggle-line></span>
-<span class=toggle-line></span>
-<span class=toggle-line></span>
-</div></div><div class=site-meta>
-<div class=multi-lang-switch>
-<i class="fa fa-fw fa-language" style=margin-right:5px></i>
-<a class=lang-link id=zh-cn href=#>中文</a>
-</div><div class=custom-logo-site-title>
-<a href=/ class=brand rel=start>
-<span class=logo-line-before><i></i></span>
+<span class=toggle-line></span></div></div><div class=site-meta><div class=multi-lang-switch><i class="fa fa-fw fa-language" style=margin-right:5px></i>
+<a class=lang-link id=zh-cn href=#>中文</a></div><div class=custom-logo-site-title><a href=/ class=brand rel=start><span class=logo-line-before><i></i></span>
 <span class=site-title>rayrain's blog</span>
-<span class=logo-line-after><i></i></span>
-</a>
-</div><p class=site-subtitle></p></div><div class=site-nav-right>
-<div class="toggle popup-trigger" style=opacity:1;top:0>
-<i class="fa fa-search fa-fw fa-lg"></i>
-</div></div></div><nav class=site-nav>
-<ul id=menu class=menu>
-<li class=menu-item>
-<a href=/ rel=section>
-<i class="menu-item-icon fa fa-fw fa-home"></i> <br>首页
-</a>
-</li><li class=menu-item>
-<a href=/post rel=section>
-<i class="menu-item-icon fa fa-fw fa-archive"></i> <br>归档
-</a>
-</li><li class=menu-item>
-<a href=/about.html rel=section>
-<i class="menu-item-icon fa fa-fw fa-user"></i> <br>关于我
-</a>
-</li><li class=menu-item>
-<a href=/404.html rel=section>
-<i class="menu-item-icon fa fa-fw fa-heartbeat"></i> <br>公益404
-</a>
-</li><li class="menu-item menu-item-search">
-<a href=javascript:; class=popup-trigger> <i class="menu-item-icon fa fa-search fa-fw"></i> <br> 搜索</a>
-</li></ul><div class=site-search>
-<div class="popup search-popup local-search-popup">
-<div class="local-search-header clearfix">
-<span class=search-icon><i class="fa fa-search"></i> </span>
-<span class=popup-btn-close><i class="fa fa-times-circle"></i></span>
-<div class=local-search-input-wrapper>
-<input autocomplete=off placeholder=搜索关键字... spellcheck=false type=text id=local-search-input autocapitalize=none autocorrect=off>
-</div></div><div id=local-search-result></div></div></div></nav></div></header><main id=main class=main>
-<div class=main-inner>
-<div class=content-wrap>
-<div id=content class=content>
-<section id=posts class=posts-expand>
-<article class="post post-type-normal" itemscope itemtype=http://schema.org/Article>
-<header class=post-header>
-<h1 class=post-title itemprop="name headline">
-<a class=post-title-link href=http://rayrain.xyz/post/elf/ itemprop=url>
-从ELF谈起
-</a>
-</h1><div class=post-meta>
-<span class=post-time>
-<i class="fa fa-calendar-o fa-fw"></i>
+<span class=logo-line-after><i></i></span></a></div><p class=site-subtitle></p></div><div class=site-nav-right><div class="toggle popup-trigger" style=opacity:1;top:0><i class="fa fa-search fa-fw fa-lg"></i></div></div></div><nav class=site-nav><ul id=menu class=menu><li class=menu-item><a href=/ rel=section><i class="menu-item-icon fa fa-fw fa-home"></i><br>首页</a></li><li class=menu-item><a href=/post rel=section><i class="menu-item-icon fa fa-fw fa-archive"></i><br>归档</a></li><li class=menu-item><a href=/about.html rel=section><i class="menu-item-icon fa fa-fw fa-user"></i><br>关于我</a></li><li class=menu-item><a href=/404.html rel=section><i class="menu-item-icon fa fa-fw fa-heartbeat"></i><br>公益404</a></li><li class="menu-item menu-item-search"><a href=javascript:; class=popup-trigger><i class="menu-item-icon fa fa-search fa-fw"></i><br>搜索</a></li></ul><div class=site-search><div class="popup search-popup local-search-popup"><div class="local-search-header clearfix"><span class=search-icon><i class="fa fa-search"></i></span>
+<span class=popup-btn-close><i class="fa fa-times-circle"></i></span><div class=local-search-input-wrapper><input autocomplete=off placeholder=搜索关键字... spellcheck=false type=text id=local-search-input autocapitalize=none autocorrect=off></div></div><div id=local-search-result></div></div></div></nav></div></header><main id=main class=main><div class=main-inner><div class=content-wrap><div id=content class=content><section id=posts class=posts-expand><article class="post post-type-normal" itemscope itemtype=http://schema.org/Article><header class=post-header><h1 class=post-title itemprop="name headline"><a class=post-title-link href=http://rayrain.xyz/post/elf/ itemprop=url>从ELF谈起</a></h1><div class=post-meta><span class=post-time><i class="fa fa-calendar-o fa-fw"></i>
 <span class=post-meta-item-text>时间：</span>
-<time itemprop=dateCreated datetime=2016-03-22T13:04:35+08:00 content="2022-03-13">
-2022-03-13
-</time>
-</span>
-<span>
-|
+<time itemprop=dateCreated datetime=2016-03-22T13:04:35+08:00 content="2022-03-13">2022-03-13</time></span>
+<span>|
 <i class="fa fa-file-word-o fa-fw"></i>
 <span class=post-meta-item-text>字数：</span>
-<span class=leancloud-world-count>1621 字</span>
-</span>
-<span>
-|
+<span class=leancloud-world-count>1621 字</span></span>
+<span>|
 <i class="fa fa-eye fa-fw"></i>
 <span class=post-meta-item-text>阅读：</span>
-<span class=leancloud-view-count>4分钟</span>
-</span>
-<span id=/post/elf/ class=leancloud_visitors data-flag-title=从ELF谈起>
-|
+<span class=leancloud-view-count>4分钟</span></span>
+<span id=/post/elf/ class=leancloud_visitors data-flag-title=从ELF谈起>|
 <i class="fa fa-binoculars fa-fw"></i>
 <span class=post-meta-item-text>阅读次数：</span>
-<span class=leancloud-visitors-count></span>
-</span>
-</div></header><div class=post-body itemprop=articleBody>
-<p>本文信息来源:</p><p><a href=https://www.bilibili.com/video/BV1u54y1Q7qf>又是一期硬核内容：ELF文件格式</a></p><p><a href=https://stackoverflow.com/questions/14361248/whats-the-difference-of-section-and-segment-in-elf-file-format>What&rsquo;s the difference of section and segment in ELF file format</a></p><p><a href=https://web.archive.org/web/20171129031316/http://nairobi-embedded.org/040_elf_sec_seg_vma_mappings.html>ELF Sections & Segments and Linux VMA Mappings</a></p><h2 id=elf简介>ELF简介</h2><p>ELF全称 executable and linkable format <del>精灵</del></p><p>是一种linux下常用的可执行文件 对象 共享库的标准文件格式</p><blockquote>
-<p>还有许多其他可执行文件格式 PE Mach-O COFF COM</p></blockquote><p>内核中处理elf相关代码参考: binfmt_elf.c</p><p>elf中的数据按照Segment(段)和Section(节)两个概念进行划分</p><h2 id=elf文件格式>ELF文件格式</h2><p><img src="https://p90.f3.n0.cdn.getcloudapp.com/items/d5u9OWz0/8564ca76-29ff-4477-a52f-65c79c1c555b.jpeg?source=viewer&v=c75c9ae737d9075608e2acc178b69250" alt="enter image description here"></p><p><img src="https://p90.f3.n0.cdn.getcloudapp.com/items/bLuKBjJw/59ace77e-4212-46d3-91e9-6e88eed4b1be.jpeg?source=viewer&v=551de8e034df51f99ffc758fca7c756e" alt=image-20220312151235824></p><h3 id=elf-header>ELF Header</h3><ul>
-<li>架构 ABI版本等基础信息</li><li>program header table的位置和数量</li><li>section header table的位置和数量</li></ul><h3 id=program-header-table>Program header table</h3><ul>
-<li>每个表项定义了一个segment</li><li>每个segment可包含多个section</li></ul><h3 id=section-header-table>Section header table</h3><ul>
-<li>每个表项定义了一个section</li></ul><h3 id=readelf命令>readelf命令</h3><p>可用readelf命令来展示elf文件的相关信息</p><p><strong>用法如下</strong>:</p><div class=highlight><pre tabindex=0 style=background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-fallback data-lang=fallback><span style=display:flex><span>用法：readelf &lt;选项&gt; elf-文件
+<span class=leancloud-visitors-count></span></span></div></header><div class=post-body itemprop=articleBody><p>本文信息来源:</p><p><a href=https://www.bilibili.com/video/BV1u54y1Q7qf>又是一期硬核内容：ELF文件格式</a></p><p><a href=https://stackoverflow.com/questions/14361248/whats-the-difference-of-section-and-segment-in-elf-file-format>What&rsquo;s the difference of section and segment in ELF file format</a></p><p><a href=https://web.archive.org/web/20171129031316/http://nairobi-embedded.org/040_elf_sec_seg_vma_mappings.html>ELF Sections & Segments and Linux VMA Mappings</a></p><h2 id=elf简介>ELF简介</h2><p>ELF全称 executable and linkable format <del>精灵</del></p><p>是一种linux下常用的可执行文件 对象 共享库的标准文件格式</p><blockquote><p>还有许多其他可执行文件格式 PE Mach-O COFF COM</p></blockquote><p>内核中处理elf相关代码参考: binfmt_elf.c</p><p>elf中的数据按照Segment(段)和Section(节)两个概念进行划分</p><h2 id=elf文件格式>ELF文件格式</h2><p><img src="https://p90.f3.n0.cdn.getcloudapp.com/items/d5u9OWz0/8564ca76-29ff-4477-a52f-65c79c1c555b.jpeg?source=viewer&v=c75c9ae737d9075608e2acc178b69250" alt="enter image description here"></p><p><img src="https://p90.f3.n0.cdn.getcloudapp.com/items/bLuKBjJw/59ace77e-4212-46d3-91e9-6e88eed4b1be.jpeg?source=viewer&v=551de8e034df51f99ffc758fca7c756e" alt=image-20220312151235824></p><h3 id=elf-header>ELF Header</h3><ul><li>架构 ABI版本等基础信息</li><li>program header table的位置和数量</li><li>section header table的位置和数量</li></ul><h3 id=program-header-table>Program header table</h3><ul><li>每个表项定义了一个segment</li><li>每个segment可包含多个section</li></ul><h3 id=section-header-table>Section header table</h3><ul><li>每个表项定义了一个section</li></ul><h3 id=readelf命令>readelf命令</h3><p>可用readelf命令来展示elf文件的相关信息</p><p><strong>用法如下</strong>:</p><div class=highlight><pre tabindex=0 style=background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-fallback data-lang=fallback><span style=display:flex><span>用法：readelf &lt;选项&gt; elf-文件
 </span></span><span style=display:flex><span> 显示关于 ELF 格式文件内容的信息
 </span></span><span style=display:flex><span> Options are:
 </span></span><span style=display:flex><span>  -a --all               Equivalent to: -h -l -S -s -r -d -V -A -I
@@ -172,18 +81,7 @@
 </span></span><span style=display:flex><span>   10     .eh_frame_hdr 
 </span></span><span style=display:flex><span>   11     
 </span></span><span style=display:flex><span>   12     .init_array .fini_array .data.rel.ro .dynamic .got 
-</span></span></code></pre></div><p>可知:</p><ul>
-<li>在加载到内存中时,程序被分成了13个Segment(从PHDR到GNU_RELRO)</li><li>每个Segment都包含了1个或者更多的Section</li></ul><h2 id=segment-vs-section>Segment vs Section</h2><h3 id=segment>Segment</h3><ul>
-<li>
-<p>包含着运行时需要的信息</p></li><li>
-<p>用于告诉操作系统,段应该被加载到虚拟内存中的什么位置?每个段都有那些权限?(read, write, execute)</p></li><li>
-<p>每个Segment主要包含加载地址 文件中的范围 内存权限 对齐方式等信息</p></li></ul><h3 id=section>Section</h3><ul>
-<li>
-<p>包含着链接时需要的信息</p></li><li>
-<p>用于告诉链接器,elf中每个部分是什么,哪里是代码,哪里是只读数据,哪里是重定位信息</p></li><li>
-<p>每个Section主要包含Section类型 文件中的位置 大小等信息</p></li><li>
-<p>链接器会把Section放入Segment中</p></li></ul><h3 id=segment和section的关系>Segment和Section的关系</h3><ul>
-<li>相同权限的Section会放入同一个Segment,例如.text和.rodata section</li><li>一个Segment包含许多Section,一个Section可以属于多个Segment</li></ul><h3 id=链接脚本>链接脚本</h3><p>运行</p><div class=highlight><pre tabindex=0 style=background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-fallback data-lang=fallback><span style=display:flex><span>ld --verbose
+</span></span></code></pre></div><p>可知:</p><ul><li>在加载到内存中时,程序被分成了13个Segment(从PHDR到GNU_RELRO)</li><li>每个Segment都包含了1个或者更多的Section</li></ul><h2 id=segment-vs-section>Segment vs Section</h2><h3 id=segment>Segment</h3><ul><li><p>包含着运行时需要的信息</p></li><li><p>用于告诉操作系统,段应该被加载到虚拟内存中的什么位置?每个段都有那些权限?(read, write, execute)</p></li><li><p>每个Segment主要包含加载地址 文件中的范围 内存权限 对齐方式等信息</p></li></ul><h3 id=section>Section</h3><ul><li><p>包含着链接时需要的信息</p></li><li><p>用于告诉链接器,elf中每个部分是什么,哪里是代码,哪里是只读数据,哪里是重定位信息</p></li><li><p>每个Section主要包含Section类型 文件中的位置 大小等信息</p></li><li><p>链接器会把Section放入Segment中</p></li></ul><h3 id=segment和section的关系>Segment和Section的关系</h3><ul><li>相同权限的Section会放入同一个Segment,例如.text和.rodata section</li><li>一个Segment包含许多Section,一个Section可以属于多个Segment</li></ul><h3 id=链接脚本>链接脚本</h3><p>运行</p><div class=highlight><pre tabindex=0 style=background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-fallback data-lang=fallback><span style=display:flex><span>ld --verbose
 </span></span></code></pre></div><p>可以看到本系统中所用的脚本</p><p>我的Archlinux 5.16.13-arch1-1的链接脚本一部分是这样:</p><div class=highlight><pre tabindex=0 style=background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-fallback data-lang=fallback><span style=display:flex><span>  .gnu.version_r  : { *(.gnu.version_r) }
 </span></span><span style=display:flex><span>  .rela.dyn       :
 </span></span><span style=display:flex><span>    {
@@ -203,8 +101,7 @@
 </span></span><span style=display:flex><span>      *(.rela.lrodata .rela.lrodata.* .rela.gnu.linkonce.lr.*)
 </span></span><span style=display:flex><span>      *(.rela.ifunc)
 </span></span><span style=display:flex><span>    }
-</span></span></code></pre></div><p>表示:</p><p><code> .gnu.version_r</code> Section 会被放入 <code>.gnu.version_r</code> Segment</p><p><code>.rela.init</code>等一大堆的Section,会被放入 <code>.rela.dyn</code> Segment</p><blockquote>
-<p>汇编中的伪指令全部都是Section,要等链接之后才会有Segment</p><p>NASM中 <code>.section</code> 和<code>.segment</code> 这两个是等效的,都表示 <code>Section</code></p></blockquote><h2 id=elf文件分类>ELF文件分类</h2><h3 id=可执行文件et_exec>可执行文件(ET_EXEC)</h3><p>可直接运行的程序,必须包含segment</p><h3 id=对象文件et_relo>对象文件(ET_REL,*.o)</h3><p>需要与其他对象文件链接,必须包含section</p><h3 id=动态库et_dynso>动态库(ET_DYN,*.so)</h3><p>与其他对象文件/可执行文件链接</p><p>必须同时包含segment和section</p><h2 id=elf的内存映射>ELF的内存映射</h2><p><img src="https://p90.f3.n0.cdn.getcloudapp.com/items/2Nuzm5x8/6763062f-8c70-4866-8e65-3ed739cd9f59.jpeg?source=viewer&v=c0b727f3a5e6f91c0d20f433f5cfe84c" alt=image-20220312152051070></p><h2 id=查看内存映射情况>查看内存映射情况</h2><div class=highlight><pre tabindex=0 style=background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-fallback data-lang=fallback><span style=display:flex><span>cat /proc/[pid]/maps
+</span></span></code></pre></div><p>表示:</p><p><code>.gnu.version_r</code> Section 会被放入 <code>.gnu.version_r</code> Segment</p><p><code>.rela.init</code>等一大堆的Section,会被放入 <code>.rela.dyn</code> Segment</p><blockquote><p>汇编中的伪指令全部都是Section,要等链接之后才会有Segment</p><p>NASM中 <code>.section</code> 和<code>.segment</code> 这两个是等效的,都表示 <code>Section</code></p></blockquote><h2 id=elf文件分类>ELF文件分类</h2><h3 id=可执行文件et_exec>可执行文件(ET_EXEC)</h3><p>可直接运行的程序,必须包含segment</p><h3 id=对象文件et_relo>对象文件(ET_REL,*.o)</h3><p>需要与其他对象文件链接,必须包含section</p><h3 id=动态库et_dynso>动态库(ET_DYN,*.so)</h3><p>与其他对象文件/可执行文件链接</p><p>必须同时包含segment和section</p><h2 id=elf的内存映射>ELF的内存映射</h2><p><img src="https://p90.f3.n0.cdn.getcloudapp.com/items/2Nuzm5x8/6763062f-8c70-4866-8e65-3ed739cd9f59.jpeg?source=viewer&v=c0b727f3a5e6f91c0d20f433f5cfe84c" alt=image-20220312152051070></p><h2 id=查看内存映射情况>查看内存映射情况</h2><div class=highlight><pre tabindex=0 style=background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-fallback data-lang=fallback><span style=display:flex><span>cat /proc/[pid]/maps
 </span></span></code></pre></div><p>比如运行</p><div class=highlight><pre tabindex=0 style=background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-fallback data-lang=fallback><span style=display:flex><span>cat /proc/self/maps
 </span></span></code></pre></div><p>查看cat本身的内存映射</p><div class=highlight><pre tabindex=0 style=background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-fallback data-lang=fallback><span style=display:flex><span>563b04d75000-563b04d77000 r--p 00000000 fe:00 6294104                    /usr/bin/cat
 </span></span><span style=display:flex><span>563b04d77000-563b04d7c000 r-xp 00002000 fe:00 6294104                    /usr/bin/cat
@@ -231,139 +128,27 @@
 </span></span><span style=display:flex><span>7ffec918d000-7ffec9191000 r--p 00000000 00:00 0                          [vvar]
 </span></span><span style=display:flex><span>7ffec9191000-7ffec9193000 r-xp 00000000 00:00 0                          [vdso]
 </span></span><span style=display:flex><span>ffffffffff600000-ffffffffff601000 --xp 00000000 00:00 0                  [vsyscall]
-</span></span></code></pre></div><p>从左到右为:</p><ul>
-<li>虚拟地址的起始和结束</li><li>该内存映射的类型flag r(read) w(write) x(execute) p(private) s(shared)</li><li>实际对象在该内存映射上相对于起始的偏移量</li><li><code>major:minor</code>: the major and minor number pairs of the device holding the file that has been mapped.</li><li>映射文件的索引节点号码</li><li>该内存映射文件的名称</li></ul></div><footer class=post-footer>
-<div class=post-tags>
-<a href=/tags/elf rel=tag title=elf>#elf#</a>
-<a href=/tags/linux rel=tag title=linux>#linux#</a>
-</div><div class=post-nav>
-<div class=article-copyright>
-<div class=article-copyright-img>
-<img src=/img/qq_qrcode.png width=129px height=129px>
-<div style=text-align:center>QQ扫一扫交流</div></div><div class=article-copyright-info>
-<p>
-<span>声明：</span>从ELF谈起
-</p><p>
-<span>链接：</span>http://rayrain.xyz/post/elf/
-</p><p>
-<span>作者：</span>rayrain
-</p><p>
-<span>声明： </span>本博客文章除特别声明外，均采用 <a href=https://creativecommons.org/licenses/by-nc-sa/3.0/ target=_blank style=text-decoration:underline>CC BY-NC-SA 3.0</a>许可协议，转载请注明出处！
-</p></div></div><div class=clear></div></div><div class=reward-qr-info>
-<div>创作实属不易，如有帮助，那就打赏博主些许茶钱吧 ^_^</div><button id=rewardButton disable=enable onclick='var qr=document.getElementById("QR");qr.style.display==="none"?qr.style.display="block":qr.style.display="none"'>
-<span>赏</span>
-</button>
-<div id=QR style=display:none>
-<div id=wechat style=display:inline-block>
-<img id=wechat_qr src=/img/wechat-pay.png alt="WeChat Pay">
-<p>微信打赏</p></div><div id=alipay style=display:inline-block>
-<img id=alipay_qr src=/img/ali-pay.png alt=Alipay>
-<p>支付宝打赏</p></div></div></div><div class=post-nav>
-<div class="post-nav-next post-nav-item">
-<a href=http://rayrain.xyz/post/vim/ rel=next title=VIM技巧(持续更新)>
-<i class="fa fa-chevron-left"></i> VIM技巧(持续更新)
-</a>
-</div><div class="post-nav-prev post-nav-item">
-</div></div><div id=ucomments></div></footer></article></section></div></div><div class=sidebar-toggle>
-<div class=sidebar-toggle-line-wrap>
-<span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+</span></span></code></pre></div><p>从左到右为:</p><ul><li>虚拟地址的起始和结束</li><li>该内存映射的类型flag r(read) w(write) x(execute) p(private) s(shared)</li><li>实际对象在该内存映射上相对于起始的偏移量</li><li><code>major:minor</code>: the major and minor number pairs of the device holding the file that has been mapped.</li><li>映射文件的索引节点号码</li><li>该内存映射文件的名称</li></ul></div><footer class=post-footer><div class=post-tags><a href=/tags/elf rel=tag title=elf>#elf#</a>
+<a href=/tags/linux rel=tag title=linux>#linux#</a></div><div class=post-nav><div class=article-copyright><div class=article-copyright-img><img src=/img/qq_qrcode.png width=129px height=129px><div style=text-align:center>QQ扫一扫交流</div></div><div class=article-copyright-info><p><span>声明：</span>从ELF谈起</p><p><span>链接：</span>http://rayrain.xyz/post/elf/</p><p><span>作者：</span>rayrain</p><p><span>声明： </span>本博客文章除特别声明外，均采用 <a href=https://creativecommons.org/licenses/by-nc-sa/3.0/ target=_blank style=text-decoration:underline>CC BY-NC-SA 3.0</a>许可协议，转载请注明出处！</p></div></div><div class=clear></div></div><div class=reward-qr-info><div>创作实属不易，如有帮助，那就打赏博主些许茶钱吧 ^_^</div><button id=rewardButton disable=enable onclick='var qr=document.getElementById("QR");qr.style.display==="none"?qr.style.display="block":qr.style.display="none"'>
+<span>赏</span></button><div id=QR style=display:none><div id=wechat style=display:inline-block><img id=wechat_qr src=/img/wechat-pay.png alt="WeChat Pay"><p>微信打赏</p></div><div id=alipay style=display:inline-block><img id=alipay_qr src=/img/ali-pay.png alt=Alipay><p>支付宝打赏</p></div></div></div><div class=post-nav><div class="post-nav-next post-nav-item"><a href=http://rayrain.xyz/post/vim/ rel=next title=VIM技巧(持续更新)><i class="fa fa-chevron-left"></i> VIM技巧(持续更新)</a></div><div class="post-nav-prev post-nav-item"></div></div><div id=ucomments></div></footer></article></section></div></div><div class=sidebar-toggle><div class=sidebar-toggle-line-wrap><span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
 <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
-<span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
-</div></div><aside id=sidebar class=sidebar>
-<div class=sidebar-inner>
-<ul class="sidebar-nav motion-element">
-<li class="sidebar-nav-toc sidebar-nav-active" data-target=post-toc-wrap>
-文章目录
-</li><li class=sidebar-nav-overview data-target=site-overview>
-站点概览
-</li></ul><section class="site-overview sidebar-panel">
-<div class="site-author motion-element" itemprop=author itemscope itemtype=http://schema.org/Person>
-<img class=site-author-image itemprop=image src=/img/avatar.png alt=rayrain>
-<p class=site-author-name itemprop=name>rayrain</p><p class="site-description motion-element" itemprop=description>
-a righteoux
-</p></div><nav class="site-state motion-element">
-<div class="site-state-item site-state-posts">
-<a href=/post/>
-<span class=site-state-item-count>4</span>
-<span class=site-state-item-name>日志</span>
-</a>
-</div><div class="site-state-item site-state-categories">
-<a href=/categories/>
-<span class=site-state-item-count>0</span>
-<span class=site-state-item-name>分类</span>
-</a>
-</div><div class="site-state-item site-state-tags">
-<a href=/tags/>
-<span class=site-state-item-count>6</span>
-<span class=site-state-item-name>标签</span>
-</a>
-</div></nav><div class="tagcloud-of-blogroll motion-element tagcloud-of-blogroll-inline">
-<div class=tagcloud-of-blogroll-title>
-<i class="fa fa-fw fa-tags"></i>
-标签云
-</div><ul class=tagcloud-of-blogroll-list>
-<li class=tagcloud-of-blogroll-item>
-<a href=/tags/c>C</a>
-</li><li class=tagcloud-of-blogroll-item>
-<a href=/tags/cpp>Cpp</a>
-</li><li class=tagcloud-of-blogroll-item>
-<a href=/tags/elf>Elf</a>
-</li><li class=tagcloud-of-blogroll-item>
-<a href=/tags/linux>Linux</a>
-</li><li class=tagcloud-of-blogroll-item>
-<a href=/tags/qemu>Qemu</a>
-</li><li class=tagcloud-of-blogroll-item>
-<a href=/tags/vim>Vim</a>
-</li></ul></div></section><section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
-<div class=post-toc>
-<div class=post-toc-content><nav id=TableOfContents>
-<ul>
-<li><a href=#elf简介>ELF简介</a></li><li><a href=#elf文件格式>ELF文件格式</a>
-<ul>
-<li><a href=#elf-header>ELF Header</a></li><li><a href=#program-header-table>Program header table</a></li><li><a href=#section-header-table>Section header table</a></li><li><a href=#readelf命令>readelf命令</a></li></ul></li><li><a href=#segment-vs-section>Segment vs Section</a>
-<ul>
-<li><a href=#segment>Segment</a></li><li><a href=#section>Section</a></li><li><a href=#segment和section的关系>Segment和Section的关系</a></li><li><a href=#链接脚本>链接脚本</a></li></ul></li><li><a href=#elf文件分类>ELF文件分类</a>
-<ul>
-<li><a href=#可执行文件et_exec>可执行文件(ET_EXEC)</a></li><li><a href=#对象文件et_relo>对象文件(ET_REL,*.o)</a></li><li><a href=#动态库et_dynso>动态库(ET_DYN,*.so)</a></li></ul></li><li><a href=#elf的内存映射>ELF的内存映射</a></li><li><a href=#查看内存映射情况>查看内存映射情况</a></li></ul></nav></div></div></section></div></aside></div></main><footer id=footer class=footer>
-<div class=footer-inner>
-<div class=copyright>
-<span class=copyright-year>
-&copy; 2010 - 2022
-</span>
+<span class="sidebar-toggle-line sidebar-toggle-line-last"></span></div></div><aside id=sidebar class=sidebar><div class=sidebar-inner><ul class="sidebar-nav motion-element"><li class="sidebar-nav-toc sidebar-nav-active" data-target=post-toc-wrap>文章目录</li><li class=sidebar-nav-overview data-target=site-overview>站点概览</li></ul><section class="site-overview sidebar-panel"><div class="site-author motion-element" itemprop=author itemscope itemtype=http://schema.org/Person><img class=site-author-image itemprop=image src=/img/avatar.png alt=rayrain><p class=site-author-name itemprop=name>rayrain</p><p class="site-description motion-element" itemprop=description>a righteoux</p></div><nav class="site-state motion-element"><div class="site-state-item site-state-posts"><a href=/post/><span class=site-state-item-count>4</span>
+<span class=site-state-item-name>日志</span></a></div><div class="site-state-item site-state-categories"><a href=/categories/><span class=site-state-item-count>0</span>
+<span class=site-state-item-name>分类</span></a></div><div class="site-state-item site-state-tags"><a href=/tags/><span class=site-state-item-count>6</span>
+<span class=site-state-item-name>标签</span></a></div></nav><div class="tagcloud-of-blogroll motion-element tagcloud-of-blogroll-inline"><div class=tagcloud-of-blogroll-title><i class="fa fa-fw fa-tags"></i>
+标签云</div><ul class=tagcloud-of-blogroll-list><li class=tagcloud-of-blogroll-item><a href=/tags/c>C</a></li><li class=tagcloud-of-blogroll-item><a href=/tags/cpp>Cpp</a></li><li class=tagcloud-of-blogroll-item><a href=/tags/elf>Elf</a></li><li class=tagcloud-of-blogroll-item><a href=/tags/linux>Linux</a></li><li class=tagcloud-of-blogroll-item><a href=/tags/qemu>Qemu</a></li><li class=tagcloud-of-blogroll-item><a href=/tags/vim>Vim</a></li></ul></div></section><section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active"><div class=post-toc><div class=post-toc-content><nav id=TableOfContents><ul><li><a href=#elf简介>ELF简介</a></li><li><a href=#elf文件格式>ELF文件格式</a><ul><li><a href=#elf-header>ELF Header</a></li><li><a href=#program-header-table>Program header table</a></li><li><a href=#section-header-table>Section header table</a></li><li><a href=#readelf命令>readelf命令</a></li></ul></li><li><a href=#segment-vs-section>Segment vs Section</a><ul><li><a href=#segment>Segment</a></li><li><a href=#section>Section</a></li><li><a href=#segment和section的关系>Segment和Section的关系</a></li><li><a href=#链接脚本>链接脚本</a></li></ul></li><li><a href=#elf文件分类>ELF文件分类</a><ul><li><a href=#可执行文件et_exec>可执行文件(ET_EXEC)</a></li><li><a href=#对象文件et_relo>对象文件(ET_REL,*.o)</a></li><li><a href=#动态库et_dynso>动态库(ET_DYN,*.so)</a></li></ul></li><li><a href=#elf的内存映射>ELF的内存映射</a></li><li><a href=#查看内存映射情况>查看内存映射情况</a></li></ul></nav></div></div></section></div></aside></div></main><footer id=footer class=footer><div class=footer-inner><div class=copyright><span class=copyright-year>&copy; 2010 - 2022</span>
 <span class=with-love><i class="fa fa-heart"></i></span>
-<span class=copyright-author>rayrain's blog</span>
-</div><div class=powered-info>
-<span class=powered-by>
-Powered by - <a class=powered-link href=//gohugo.io target=_blank title=hugo>Hugo v0.93.2</a>
-</span>
+<span class=copyright-author>rayrain's blog</span></div><div class=powered-info><span class=powered-by>Powered by - <a class=powered-link href=//gohugo.io target=_blank title=hugo>Hugo v0.96.0</a></span>
 <span class=separator-line>/</span>
-<span class=theme-info>
-Theme by - <a class=powered-link href=//github.com/elkan1788/hugo-theme-next target=_blank> NexT
-</a>
-</span>
-</div><div class=vistor-info>
-</div><div class=license-info>
-<span class=storage-info>
-Storage by
-<a href=https://pages.github.com/ style=font-weight:700 target=_blank>Github Pages</a>
-</span>
+<span class=theme-info>Theme by - <a class=powered-link href=//github.com/elkan1788/hugo-theme-next target=_blank>NexT</a></span></div><div class=vistor-info></div><div class=license-info><span class=storage-info>Storage by
+<a href=https://pages.github.com/ style=font-weight:700 target=_blank>Github Pages</a></span>
 <span class=separator-line>/</span>
-<span class=license-num>
-<a href=https://pages.github.com/ target=_blank>Xodom</a>
-</span>
-</div></div></footer><div class=back-to-top>
-<i class="fa fa-arrow-up"></i>
-<span id=scrollpercent><span>0</span>%</span>
-</div></div><script type=text/javascript src=//cdn.bootcdn.net/ajax/libs/jquery/2.1.4/jquery.min.js></script>
+<span class=license-num><a href=https://pages.github.com/ target=_blank>Xodom</a></span></div></div></footer><div class=back-to-top><i class="fa fa-arrow-up"></i>
+<span id=scrollpercent><span>0</span>%</span></div></div><script type=text/javascript src=//cdn.bootcdn.net/ajax/libs/jquery/2.1.4/jquery.min.js></script>
 <script type=text/javascript src=/js/search.js></script>
 <script type=text/javascript src=/js/affix.js></script>
 <script type=text/javascript src=/js/scrollspy.js></script>
-<script type=text/javascript>function detectIE(){var e=window.navigator.userAgent,t=e.indexOf("MSIE "),n=e.indexOf("Trident/"),s=e.indexOf("Edge/");return t>0||n>0||s>0?-1:1}function getCntViewHeight(){var t=$("#content").height(),e=$(window).height(),n=t>e?t-e:$(document).height()-e;return n}function getScrollbarWidth(){var e=$("<div />").addClass("scrollbar-measure").prependTo("body"),t=e[0],n=t.offsetWidth-t.clientWidth;return e.remove(),n}function registerBackTop(){var t=50,e=$(".back-to-top");$(window).on("scroll",function(){e.toggleClass("back-to-top-on",window.pageYOffset>t);var s=$(window).scrollTop(),o=getCntViewHeight(),i=s/o,n=Math.round(i*100),a=n>100?100:n;$("#scrollpercent>span").html(a)}),e.on("click",function(){$("html,body").animate({scrollTop:0,screenLeft:0},800)})}function initScrollSpy(){var e=".post-toc",s=$(e),t=".active-current";s.on("activate.bs.scrollspy",function(){var t=$(e+" .active").last();n(),t.addClass("active-current")}).on("clear.bs.scrollspy",n),$("body").scrollspy({target:e});function n(){$(e+" "+t).removeClass(t.substring(1))}}function initAffix(){var e=$(".header-inner").height(),t=parseInt($(".main").css("padding-bottom"),10),n=e+10;$(".sidebar-inner").affix({offset:{top:n,bottom:t}}),$(document).on("affixed.bs.affix",function(){updateTOCHeight(document.body.clientHeight-100)})}function initTOCDimension(){$(window).on("resize",function(){e&&clearTimeout(e),e=setTimeout(function(){var e=document.body.clientHeight-100;updateTOCHeight(e)},0)}),updateTOCHeight(document.body.clientHeight-100);var e,t=getScrollbarWidth();$(".post-toc").css("width","calc(100% + "+t+"px)")}function updateTOCHeight(e){e=e||"auto",$(".post-toc").css("max-height",e)}$(function(){var t=$(".header-inner").height()+10,n,s,e,o;$("#sidebar").css({'margin-top':t}).show(),n=parseInt($("#sidebar").css("margin-top")),s=parseInt($(".sidebar-inner").css("height")),e=n+s,o=$(".content-wrap").height(),o<e&&$(".content-wrap").css("min-height",e),$(".site-nav-toggle").on("click",function(){var e=$(".site-nav"),o=$(".toggle"),t="site-nav-on",i="toggle-close",n=e.hasClass(t),a=n?"slideUp":"slideDown",s=n?"removeClass":"addClass";e.stop()[a]("normal",function(){e[s](t),o[s](i)})}),registerBackTop(),initScrollSpy(),initAffix(),initTOCDimension(),$(".sidebar-nav-toc").click(function(){$(this).addClass("sidebar-nav-active"),$(this).next().removeClass("sidebar-nav-active"),$("."+$(this).next().attr("data-target")).toggle(500),$("."+$(this).attr("data-target")).toggle(500)}),$(".sidebar-nav-overview").click(function(){$(this).addClass("sidebar-nav-active"),$(this).prev().removeClass("sidebar-nav-active"),$("."+$(this).prev().attr("data-target")).toggle(500),$("."+$(this).attr("data-target")).toggle(500)})})</script>
-<script src=//cdn.bootcdn.net/ajax/libs/imageviewer/0.1.0/viewer.min.js></script>
-<script type=text/javascript>$(function(){$(".post-body").viewer()})</script>
-<script src=//cdn.jsdelivr.net/npm/leancloud-storage@4.6.1/dist/av-min.js></script>
-<script type=text/javascript>function showTime(s){var t=new AV.Query(s),e=[],n=$(".leancloud_visitors");n.each(function(){e.push($(this).attr("id").trim())}),t.containedIn("url",e),t.find().then(s=>{var o=".leancloud-visitors-count",t,r,i,l,a,c;if(s.length==0){n.find(o).text(0);return}for(t=0;t<s.length;t++)r=s[t],i=r.get("url"),l=r.get("time"),a=document.getElementById(i),$(a).find(o).text(l);for(t=0;t<e.length;t++)i=e[t],a=document.getElementById(i),c=$(a).find(o),c.text()==''&&c.text(0)},e=>{console.log("Query vistors failed: "+e)})}function addCount(s){var t=$(".leancloud_visitors"),e=t.attr("id").trim(),o=t.attr("data-flag-title").trim(),n=new AV.Query("Counter");n.equalTo("url",e),n.find().then(i=>{if(i.length>0){var a=i[0],n,t;a.increment("time",1),a.save(null,{query:new AV.Query("Counter").equalTo("url",e),fetchWhenSave:!0}).then(t=>{var n=$(document.getElementById(e));n.find(".leancloud-visitors-count").text(t.get("time"))},e=>{console.log("Update vistor failed: "+e)})}else n=new AV.ACL,n.setPublicReadAccess(!0),n.setPublicWriteAccess(!0),t=new s,t.set("title",o),t.set("url",e),t.set("time",1),t.setACL(n),t.save().then(s=>{var n=$(document.getElementById(e));n.find(".leancloud-visitors-count").text(t.get("time"))},e=>{console.log("Save new vistor failed: "+e)})})}$(function(){AV.init({appId:"",appKey:"",serverURL:""});const e=AV.Object.extend("Counter");$(".leancloud_visitors").length==1?addCount(e):$(".post-title-link").length>1&&showTime(e)})</script>
-<script type=text/javascript>(function(){var e=document.createElement("script");e.type="text/javascript",e.async=!0,e.setAttribute("issue-term","pathname"),e.setAttribute("theme","github-light"),e.setAttribute("repo","Reisen1969/Reisen1969.github.io"),e.crossorigin="anonymous",e.src="https://utteranc.es/client.js",document.getElementById("ucomments").appendChild(e)})()</script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.2/MathJax.js?config=TeX-MML-AM_SVG"></script>
-<script>(function(){var e=document.createElement("script"),t,n=window.location.protocol.split(":")[0];n==="https"?e.src="https://zz.bdstatic.com/linksubmit/push.js":e.src="http://push.zhanzhang.baidu.com/push.js",t=document.getElementsByTagName("script")[0],t.parentNode.insertBefore(e,t)})()</script>
-</body></html>
+<script type=text/javascript>function detectIE(){var e=window.navigator.userAgent,t=e.indexOf("MSIE "),n=e.indexOf("Trident/"),s=e.indexOf("Edge/");return t>0||n>0||s>0?-1:1}function getCntViewHeight(){var t=$("#content").height(),e=$(window).height(),n=t>e?t-e:$(document).height()-e;return n}function getScrollbarWidth(){var e=$("<div />").addClass("scrollbar-measure").prependTo("body"),t=e[0],n=t.offsetWidth-t.clientWidth;return e.remove(),n}function registerBackTop(){var t=50,e=$(".back-to-top");$(window).on("scroll",function(){e.toggleClass("back-to-top-on",window.pageYOffset>t);var s=$(window).scrollTop(),o=getCntViewHeight(),i=s/o,n=Math.round(i*100),a=n>100?100:n;$("#scrollpercent>span").html(a)}),e.on("click",function(){$("html,body").animate({scrollTop:0,screenLeft:0},800)})}function initScrollSpy(){var e=".post-toc",s=$(e),t=".active-current";s.on("activate.bs.scrollspy",function(){var t=$(e+" .active").last();n(),t.addClass("active-current")}).on("clear.bs.scrollspy",n),$("body").scrollspy({target:e});function n(){$(e+" "+t).removeClass(t.substring(1))}}function initAffix(){var e=$(".header-inner").height(),t=parseInt($(".main").css("padding-bottom"),10),n=e+10;$(".sidebar-inner").affix({offset:{top:n,bottom:t}}),$(document).on("affixed.bs.affix",function(){updateTOCHeight(document.body.clientHeight-100)})}function initTOCDimension(){$(window).on("resize",function(){e&&clearTimeout(e),e=setTimeout(function(){var e=document.body.clientHeight-100;updateTOCHeight(e)},0)}),updateTOCHeight(document.body.clientHeight-100);var e,t=getScrollbarWidth();$(".post-toc").css("width","calc(100% + "+t+"px)")}function updateTOCHeight(e){e=e||"auto",$(".post-toc").css("max-height",e)}$(function(){var t=$(".header-inner").height()+10,n,s,e,o;$("#sidebar").css({'margin-top':t}).show(),n=parseInt($("#sidebar").css("margin-top")),s=parseInt($(".sidebar-inner").css("height")),e=n+s,o=$(".content-wrap").height(),o<e&&$(".content-wrap").css("min-height",e),$(".site-nav-toggle").on("click",function(){var e=$(".site-nav"),o=$(".toggle"),t="site-nav-on",i="toggle-close",n=e.hasClass(t),a=n?"slideUp":"slideDown",s=n?"removeClass":"addClass";e.stop()[a]("normal",function(){e[s](t),o[s](i)})}),registerBackTop(),initScrollSpy(),initAffix(),initTOCDimension(),$(".sidebar-nav-toc").click(function(){$(this).addClass("sidebar-nav-active"),$(this).next().removeClass("sidebar-nav-active"),$("."+$(this).next().attr("data-target")).toggle(500),$("."+$(this).attr("data-target")).toggle(500)}),$(".sidebar-nav-overview").click(function(){$(this).addClass("sidebar-nav-active"),$(this).prev().removeClass("sidebar-nav-active"),$("."+$(this).prev().attr("data-target")).toggle(500),$("."+$(this).attr("data-target")).toggle(500)})})</script><script src=//cdn.bootcdn.net/ajax/libs/imageviewer/0.1.0/viewer.min.js></script>
+<script type=text/javascript>$(function(){$(".post-body").viewer()})</script><script src=//cdn.jsdelivr.net/npm/leancloud-storage@4.6.1/dist/av-min.js></script>
+<script type=text/javascript>function showTime(s){var t=new AV.Query(s),e=[],n=$(".leancloud_visitors");n.each(function(){e.push($(this).attr("id").trim())}),t.containedIn("url",e),t.find().then(s=>{var o=".leancloud-visitors-count",t,r,i,l,a,c;if(s.length==0){n.find(o).text(0);return}for(t=0;t<s.length;t++)r=s[t],i=r.get("url"),l=r.get("time"),a=document.getElementById(i),$(a).find(o).text(l);for(t=0;t<e.length;t++)i=e[t],a=document.getElementById(i),c=$(a).find(o),c.text()==''&&c.text(0)},e=>{console.log("Query vistors failed: "+e)})}function addCount(s){var t=$(".leancloud_visitors"),e=t.attr("id").trim(),o=t.attr("data-flag-title").trim(),n=new AV.Query("Counter");n.equalTo("url",e),n.find().then(i=>{if(i.length>0){var a=i[0],n,t;a.increment("time",1),a.save(null,{query:new AV.Query("Counter").equalTo("url",e),fetchWhenSave:!0}).then(t=>{var n=$(document.getElementById(e));n.find(".leancloud-visitors-count").text(t.get("time"))},e=>{console.log("Update vistor failed: "+e)})}else n=new AV.ACL,n.setPublicReadAccess(!0),n.setPublicWriteAccess(!0),t=new s,t.set("title",o),t.set("url",e),t.set("time",1),t.setACL(n),t.save().then(s=>{var n=$(document.getElementById(e));n.find(".leancloud-visitors-count").text(t.get("time"))},e=>{console.log("Save new vistor failed: "+e)})})}$(function(){AV.init({appId:"",appKey:"",serverURL:""});const e=AV.Object.extend("Counter");$(".leancloud_visitors").length==1?addCount(e):$(".post-title-link").length>1&&showTime(e)})</script><script type=text/javascript>(function(){var e=document.createElement("script");e.type="text/javascript",e.async=!0,e.setAttribute("issue-term","pathname"),e.setAttribute("theme","github-light"),e.setAttribute("repo","Reisen1969/Reisen1969.github.io"),e.crossorigin="anonymous",e.src="https://utteranc.es/client.js",document.getElementById("ucomments").appendChild(e)})()</script><script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.2/MathJax.js?config=TeX-MML-AM_SVG"></script>
+<script>(function(){var e=document.createElement("script"),t,n=window.location.protocol.split(":")[0];n==="https"?e.src="https://zz.bdstatic.com/linksubmit/push.js":e.src="http://push.zhanzhang.baidu.com/push.js",t=document.getElementsByTagName("script")[0],t.parentNode.insertBefore(e,t)})()</script></body></html>
