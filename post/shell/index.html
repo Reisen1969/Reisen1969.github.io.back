@@ -10,7 +10,7 @@
 <span>|
 <i class="fa fa-file-word-o fa-fw"></i>
 <span class=post-meta-item-text>字数：</span>
-<span class=leancloud-world-count>64 字</span></span>
+<span class=leancloud-world-count>46 字</span></span>
 <span>|
 <i class="fa fa-eye fa-fw"></i>
 <span class=post-meta-item-text>阅读：</span>
@@ -18,19 +18,14 @@
 <span id=/post/shell/ class=leancloud_visitors data-flag-title=shell脚本用法>|
 <i class="fa fa-binoculars fa-fw"></i>
 <span class=post-meta-item-text>阅读次数：</span>
-<span class=leancloud-visitors-count></span></span></div></header><div class=post-body itemprop=articleBody><h2 id=分支>分支</h2><div class=highlight><pre tabindex=0 style=background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-fallback data-lang=fallback><span style=display:flex><span>if [ 条件表达式 ]; then
-</span></span><span style=display:flex><span>    指令
-</span></span><span style=display:flex><span>else [ 条件表达式 ]; then
-</span></span><span style=display:flex><span>fi
-</span></span></code></pre></div><div class=highlight><pre tabindex=0 style=background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-fallback data-lang=fallback><span style=display:flex><span>if [ 条件表达式 ]; then
-</span></span><span style=display:flex><span>    指令一
+<span class=leancloud-visitors-count></span></span></div></header><div class=post-body itemprop=articleBody><h2 id=分支>分支</h2><div class=highlight><pre tabindex=0 style=background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-fallback data-lang=fallback><span style=display:flex><span>if [[ $1 == &#39;qd&#39; ]]; then
+</span></span><span style=display:flex><span>   echo &#39;1&#39;
+</span></span><span style=display:flex><span>elif [[ $1 == &#39;qi&#39; ]]; then
+</span></span><span style=display:flex><span> echo &#39;2&#39;
+</span></span><span style=display:flex><span>elif [[ $1 == &#39;ob&#39; ]]; then
+</span></span><span style=display:flex><span> echo &#39;3&#39;
 </span></span><span style=display:flex><span>else
-</span></span><span style=display:flex><span>    指令二
-</span></span><span style=display:flex><span>fi
-</span></span></code></pre></div><div class=highlight><pre tabindex=0 style=background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-fallback data-lang=fallback><span style=display:flex><span>if [[ $1==&#39;d&#39; ]]; then
-</span></span><span style=display:flex><span>   echo $1
-</span></span><span style=display:flex><span>else
-</span></span><span style=display:flex><span>    echo &#34;error&#34;
+</span></span><span style=display:flex><span>  echo &#39;error&#39;
 </span></span><span style=display:flex><span>fi
 </span></span></code></pre></div><h2 id=传入参数>传入参数</h2><p>使用 $1 $2 $3 $4表示</p></div><footer class=post-footer><div class=post-tags><a href=/tags/linux rel=tag title=linux>#linux#</a>
 <a href=/tags/shell rel=tag title=shell>#shell#</a></div><div class=post-nav><div class=article-copyright><div class=article-copyright-img><img src=/img/qq_qrcode.png width=129px height=129px><div style=text-align:center>QQ扫一扫交流</div></div><div class=article-copyright-info><p><span>声明：</span>shell脚本用法</p><p><span>链接：</span>http://rayrain.xyz/post/shell/</p><p><span>作者：</span>rayrain</p><p><span>声明： </span>本博客文章除特别声明外，均采用 <a href=https://creativecommons.org/licenses/by-nc-sa/3.0/ target=_blank style=text-decoration:underline>CC BY-NC-SA 3.0</a>许可协议，转载请注明出处！</p></div></div><div class=clear></div></div><div class=reward-qr-info><div>创作实属不易，如有帮助，那就打赏博主些许茶钱吧 ^_^</div><button id=rewardButton disable=enable onclick='var qr=document.getElementById("QR");qr.style.display==="none"?qr.style.display="block":qr.style.display="none"'>

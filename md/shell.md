@@ -14,28 +14,19 @@ tags = [
 ## 分支
 
 ```
-if [ 条件表达式 ]; then
-    指令
-else [ 条件表达式 ]; then
-fi
-```
-
-```
-if [ 条件表达式 ]; then
-    指令一
+if [[ $1 == 'qd' ]]; then
+   echo '1'
+elif [[ $1 == 'qi' ]]; then
+ echo '2'
+elif [[ $1 == 'ob' ]]; then
+ echo '3'
 else
-    指令二
-fi
-```
-
-```
-if [[ $1=='d' ]]; then
-   echo $1
-else
-    echo "error"
+  echo 'error'
 fi
 
 ```
+
+
 
 ## 传入参数
 
