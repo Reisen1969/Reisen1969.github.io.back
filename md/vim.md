@@ -174,6 +174,16 @@ show : 显示连接                       (Usage: show)
 
 ```
 
+## 寄存器
+
+![img](https://pic3.zhimg.com/v2-9752311b4c4e51ddb02f59ce25e4830e_b.jpg)
+
+### 访问寄存器
+
+```
+"registers
+```
+
 
 
 ## 正则表达式
