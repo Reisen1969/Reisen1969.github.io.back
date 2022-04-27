@@ -77,6 +77,34 @@
 <article class="post post-type-normal" itemscope itemtype=http://schema.org/Article>
 <header class=post-header>
 <h1 class=post-title itemprop="name headline">
+<a class=post-title-link href=http://rayrain.xyz/post/c++test/ itemprop=url>
+C++记录
+</a>
+</h1><div class=post-meta>
+<span class=post-time>
+<i class="fa fa-calendar-o fa-fw"></i>
+<span class=post-meta-item-text>时间：</span>
+<time itemprop=dateCreated datetime=2016-03-22T13:04:35+08:00 content="2022-04-26">
+2022-04-26
+</time>
+</span>
+<span>
+|
+<i class="fa fa-file-word-o fa-fw"></i>
+<span class=post-meta-item-text>字数：</span>
+<span class=leancloud-world-count>43 字</span>
+</span>
+<span>
+|
+<i class="fa fa-eye fa-fw"></i>
+<span class=post-meta-item-text>阅读：</span>
+<span class=leancloud-view-count>1分钟</span>
+</span>
+</div></header><div class=post-body itemprop=articleBody>
+cin读入逗号分隔的数字 #include&lt;bits/stdc++.h> using namespace std; int main() { vector&lt;int> data; string s; getline(cin,s); istringstream input; input.str(s); for(string line;getline(input,line,',');) { data.push_back(stoi(line)); } int sum = 0; for(auto i:data) sum+=i; cout&lt;&lt;sum; return 0; }
+</div><footer class=post-footer><div class=post-eof></div></footer></article><article class="post post-type-normal" itemscope itemtype=http://schema.org/Article>
+<header class=post-header>
+<h1 class=post-title itemprop="name headline">
 <a class=post-title-link href=http://rayrain.xyz/post/riscvhead/ itemprop=url>
 riscv 启动分析
 </a>
@@ -198,38 +226,6 @@ shell脚本用法
 </span>
 </div></header><div class=post-body itemprop=articleBody>
 分支 if [[ $1 == 'qd' ]]; then echo '1' elif [[ $1 == 'qi' ]]; then echo '2' elif [[ $1 == 'ob' ]]; then echo '3' else echo 'error' fi 传入参数 使用 $1 $2 $3 $4表示
-</div><footer class=post-footer><div class=post-eof></div></footer></article><article class="post post-type-normal" itemscope itemtype=http://schema.org/Article>
-<header class=post-header>
-<h1 class=post-title itemprop="name headline">
-<a class=post-title-link href=http://rayrain.xyz/post/riscv_kernel/ itemprop=url>
-使用qemu启动riscv64 kernel
-</a>
-</h1><div class=post-meta>
-<span class=post-time>
-<i class="fa fa-calendar-o fa-fw"></i>
-<span class=post-meta-item-text>时间：</span>
-<time itemprop=dateCreated datetime=2016-03-22T13:04:35+08:00 content="2022-04-16">
-2022-04-16
-</time>
-</span>
-<span>
-|
-<i class="fa fa-file-word-o fa-fw"></i>
-<span class=post-meta-item-text>字数：</span>
-<span class=leancloud-world-count>379 字</span>
-</span>
-<span>
-|
-<i class="fa fa-eye fa-fw"></i>
-<span class=post-meta-item-text>阅读：</span>
-<span class=leancloud-view-count>1分钟</span>
-</span>
-</div></header><div class=post-body itemprop=articleBody>
-在这里只是记录一下,方便以后查阅 本文的内容来源 riscv官方网页 解决文件系统问题 编译busybox 获取源码 git clone https://github.com/qemu/qemu git clone https://github.com/torvalds/linux git clone https://git.busybox.net/busybox 编译qemu ./configure --target-list=riscv64-softmmu
-</div><div class="post-more-link text-center">
-<a class=btn href=http://rayrain.xyz/post/riscv_kernel/ rel=contents>
-阅读全文 &#187;
-</a>
 </div><footer class=post-footer><div class=post-eof></div></footer></article></section><nav class=pagination>
 <span class="page-number current">1</span>
 <a class=page-number href=/p/2/>2</a>
@@ -249,7 +245,7 @@ a righteoux
 </p></div><nav class="site-state motion-element">
 <div class="site-state-item site-state-posts">
 <a href=/post/>
-<span class=site-state-item-count>9</span>
+<span class=site-state-item-count>10</span>
 <span class=site-state-item-name>日志</span>
 </a>
 </div><div class="site-state-item site-state-categories">
@@ -275,15 +271,15 @@ RSS 订阅
 <li class=tagcloud-of-blogroll-item>
 <a href=/tags/linux>Linux</a>
 </li><li class=tagcloud-of-blogroll-item>
+<a href=/tags/c>C</a>
+</li><li class=tagcloud-of-blogroll-item>
+<a href=/tags/cpp>Cpp</a>
+</li><li class=tagcloud-of-blogroll-item>
 <a href=/tags/kernel>Kernel</a>
 </li><li class=tagcloud-of-blogroll-item>
 <a href=/tags/qemu>Qemu</a>
 </li><li class=tagcloud-of-blogroll-item>
 <a href=/tags/riscv>Riscv</a>
-</li><li class=tagcloud-of-blogroll-item>
-<a href=/tags/c>C</a>
-</li><li class=tagcloud-of-blogroll-item>
-<a href=/tags/cpp>Cpp</a>
 </li><li class=tagcloud-of-blogroll-item>
 <a href=/tags/elf>Elf</a>
 </li><li class=tagcloud-of-blogroll-item>

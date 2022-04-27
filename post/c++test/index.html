@@ -4,21 +4,22 @@
 <meta http-equiv=x-ua-compatible content="IE=edge,chrome=1">
 <meta name=viewport content="width=device-width,initial-scale=1,maximum-scale=1">
 <meta http-equiv=content-security-policy content="upgrade-insecure-requests">
-<title> shell - rayrain's blog </title><meta name=keywords content="righteoux">
+<title> C++记录 - rayrain's blog </title><meta name=keywords content="righteoux">
 <meta name=author content="rayrain">
-<meta property="og:title" content="shell">
+<meta property="og:title" content="C++记录">
 <meta property="og:site_name" content="rayrain's blog">
 <meta property="og:image" content="/img/author.jpg">
-<meta name=title content="shell - rayrain's blog">
-<meta name=description content="rayrain's blog">
+<meta name=title content="C++记录 - rayrain's blog">
+<meta name=description content="C++">
 <link rel="shortcut icon" href=/img/favicon.ico>
 <link rel=apple-touch-icon href=/img/apple-touch-icon.png>
 <link rel=apple-touch-icon-precomposed href=/img/apple-touch-icon.png>
 <link href=//cdn.bootcdn.net/ajax/libs/font-awesome/4.6.2/css/font-awesome.min.css rel=stylesheet type=text/css>
+<link href=//cdn.bootcdn.net/ajax/libs/imageviewer/0.1.0/viewer.min.css rel=stylesheet>
 <link href=/css/main.css rel=stylesheet type=text/css>
 <link href=/css/syntax.css rel=stylesheet type=text/css>
 </head><body itemscope itemtype=http://schema.org/WebPage lang=zh-hans>
-<div class="container one-collumn sidebar-position-left">
+<div class="container one-collumn sidebar-position-left page-home">
 <div class=headband></div><header id=header class=header itemscope itemtype=http://schema.org/WPHeader>
 <div class=header-inner> <div class=site-brand-container>
 <div class=site-nav-toggle>
@@ -70,31 +71,115 @@
 <div class=main-inner>
 <div class=content-wrap>
 <div id=content class=content>
-<section id=posts class=posts-collapse>
-<div class=collection-title>
-<h2>shell
-<small>标签</small>
-</h2></div><div class=collection-title>
-<h2 class="archive-year motion-element" id=archive-year-2022>2022</h2></div><article class="post post-type-normal }}" itemscope itemtype=http://schema.org/Article>
+<section id=posts class=posts-expand>
+<article class="post post-type-normal" itemscope itemtype=http://schema.org/Article>
 <header class=post-header>
-<h1 class=post-title>
-<a class=post-title-link href=http://rayrain.xyz/post/shell/ itemprop=url>
-<span itemprop=name>shell脚本用法</span>
+<h1 class=post-title itemprop="name headline">
+<a class=post-title-link href=http://rayrain.xyz/post/c++test/ itemprop=url>
+C++记录
 </a>
 </h1><div class=post-meta>
-<time class=post-time itemprop=dateCreated datetime=2022-04-16 content="04-16">
-04-16
+<span class=post-time>
+<i class="fa fa-calendar-o fa-fw"></i>
+<span class=post-meta-item-text>时间：</span>
+<time itemprop=dateCreated datetime=2016-03-22T13:04:35+08:00 content="2022-04-26">
+2022-04-26
 </time>
-</div></header></article></section><nav class=pagination>
-<span class="page-number current">1</span>
-</nav></div></div><div class=sidebar-toggle>
+</span>
+<span>
+|
+<i class="fa fa-file-word-o fa-fw"></i>
+<span class=post-meta-item-text>字数：</span>
+<span class=leancloud-world-count>43 字</span>
+</span>
+<span>
+|
+<i class="fa fa-eye fa-fw"></i>
+<span class=post-meta-item-text>阅读：</span>
+<span class=leancloud-view-count>1分钟</span>
+</span>
+<span id=/post/c++test/ class=leancloud_visitors data-flag-title=C++记录>
+|
+<i class="fa fa-binoculars fa-fw"></i>
+<span class=post-meta-item-text>阅读次数：</span>
+<span class=leancloud-visitors-count></span>
+</span>
+</div></header><div class=post-body itemprop=articleBody>
+<h2 id=cin读入逗号分隔的数字>cin读入逗号分隔的数字</h2><div class=highlight><pre tabindex=0 style=background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-fallback data-lang=fallback><span style=display:flex><span>
+</span></span><span style=display:flex><span>#include&lt;bits/stdc++.h&gt;
+</span></span><span style=display:flex><span>using namespace std;
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>int main()
+</span></span><span style=display:flex><span>{
+</span></span><span style=display:flex><span>    vector&lt;int&gt; data;
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>    string s;
+</span></span><span style=display:flex><span>    getline(cin,s);
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>    istringstream input;
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>    input.str(s);
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>    for(string line;getline(input,line,&#39;,&#39;);) {
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>    data.push_back(stoi(line));
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>    }
+</span></span><span style=display:flex><span>    int sum = 0;
+</span></span><span style=display:flex><span>    for(auto i:data) sum+=i;
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>    cout&lt;&lt;sum;
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>    return 0;
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>}
+</span></span></code></pre></div></div><footer class=post-footer>
+<div class=post-tags>
+<a href=/tags/c rel=tag title=C>#C#</a>
+<a href=/tags/cpp rel=tag title=CPP>#CPP#</a>
+</div><div class=post-nav>
+<div class=article-copyright>
+<div class=article-copyright-img>
+<img src=/img/qq_qrcode.png width=129px height=129px>
+<div style=text-align:center>QQ扫一扫交流</div></div><div class=article-copyright-info>
+<p>
+<span>声明：</span>C++记录
+</p><p>
+<span>链接：</span>http://rayrain.xyz/post/c++test/
+</p><p>
+<span>作者：</span>rayrain
+</p><p>
+<span>声明： </span>本博客文章除特别声明外，均采用 <a href=https://creativecommons.org/licenses/by-nc-sa/3.0/ target=_blank style=text-decoration:underline>CC BY-NC-SA 3.0</a>许可协议，转载请注明出处！
+</p></div></div><div class=clear></div></div><div class=reward-qr-info>
+<div>创作实属不易，如有帮助，那就打赏博主些许茶钱吧 ^_^</div><button id=rewardButton disable=enable onclick='var qr=document.getElementById("QR");qr.style.display==="none"?qr.style.display="block":qr.style.display="none"'>
+<span>赏</span>
+</button>
+<div id=QR style=display:none>
+<div id=wechat style=display:inline-block>
+<img id=wechat_qr src=/img/wechat-pay.png alt="WeChat Pay">
+<p>微信打赏</p></div><div id=alipay style=display:inline-block>
+<img id=alipay_qr src=/img/ali-pay.png alt=Alipay>
+<p>支付宝打赏</p></div></div></div><div class=post-nav>
+<div class="post-nav-next post-nav-item">
+</div><div class="post-nav-prev post-nav-item">
+<a href=http://rayrain.xyz/post/riscvhead/ rel=prev title="riscv 启动分析">
+riscv 启动分析
+<i class="fa fa-chevron-right"></i>
+</a>
+</div></div><div id=ucomments></div></footer></article></section></div></div><div class=sidebar-toggle>
 <div class=sidebar-toggle-line-wrap>
 <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
 <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
 <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
 </div></div><aside id=sidebar class=sidebar>
 <div class=sidebar-inner>
-<section class="site-overview sidebar-panel sidebar-panel-active">
+<ul class="sidebar-nav motion-element">
+<li class="sidebar-nav-toc sidebar-nav-active" data-target=post-toc-wrap>
+文章目录
+</li><li class=sidebar-nav-overview data-target=site-overview>
+站点概览
+</li></ul><section class="site-overview sidebar-panel">
 <div class="site-author motion-element" itemprop=author itemscope itemtype=http://schema.org/Person>
 <img class=site-author-image itemprop=image src=/img/avatar.png alt=rayrain>
 <p class=site-author-name itemprop=name>rayrain</p><p class="site-description motion-element" itemprop=description>
@@ -115,12 +200,7 @@ a righteoux
 <span class=site-state-item-count>10</span>
 <span class=site-state-item-name>标签</span>
 </a>
-</div></nav><div class="feed-link motion-element">
-<a href=/tags/shell/index.xml rel=alternate type=application/rss+xml target=_blank>
-<i class="fa fa-rss"></i>
-RSS 订阅
-</a>
-</div><div class="tagcloud-of-blogroll motion-element tagcloud-of-blogroll-inline">
+</div></nav><div class="tagcloud-of-blogroll motion-element tagcloud-of-blogroll-inline">
 <div class=tagcloud-of-blogroll-title>
 <i class="fa fa-fw fa-tags"></i>
 标签云
@@ -145,7 +225,11 @@ RSS 订阅
 <a href=/tags/vim>Vim</a>
 </li><li class=tagcloud-of-blogroll-item>
 <a href=/tags/%E6%AD%A3%E5%88%99>正则</a>
-</li></ul></div></section></div></aside></div></main><footer id=footer class=footer>
+</li></ul></div></section><section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+<div class=post-toc>
+<div class=post-toc-content><nav id=TableOfContents>
+<ul>
+<li><a href=#cin读入逗号分隔的数字>cin读入逗号分隔的数字</a></li></ul></nav></div></div></section></div></aside></div></main><footer id=footer class=footer>
 <div class=footer-inner>
 <div class=copyright>
 <span class=copyright-year>
@@ -180,5 +264,11 @@ Storage by
 <script type=text/javascript src=/js/affix.js></script>
 <script type=text/javascript src=/js/scrollspy.js></script>
 <script type=text/javascript>function detectIE(){var e=window.navigator.userAgent,t=e.indexOf("MSIE "),n=e.indexOf("Trident/"),s=e.indexOf("Edge/");return t>0||n>0||s>0?-1:1}function getCntViewHeight(){var t=$("#content").height(),e=$(window).height(),n=t>e?t-e:$(document).height()-e;return n}function getScrollbarWidth(){var e=$("<div />").addClass("scrollbar-measure").prependTo("body"),t=e[0],n=t.offsetWidth-t.clientWidth;return e.remove(),n}function registerBackTop(){var t=50,e=$(".back-to-top");$(window).on("scroll",function(){e.toggleClass("back-to-top-on",window.pageYOffset>t);var s=$(window).scrollTop(),o=getCntViewHeight(),i=s/o,n=Math.round(i*100),a=n>100?100:n;$("#scrollpercent>span").html(a)}),e.on("click",function(){$("html,body").animate({scrollTop:0,screenLeft:0},800)})}function initScrollSpy(){var e=".post-toc",s=$(e),t=".active-current";s.on("activate.bs.scrollspy",function(){var t=$(e+" .active").last();n(),t.addClass("active-current")}).on("clear.bs.scrollspy",n),$("body").scrollspy({target:e});function n(){$(e+" "+t).removeClass(t.substring(1))}}function initAffix(){var e=$(".header-inner").height(),t=parseInt($(".main").css("padding-bottom"),10),n=e+10;$(".sidebar-inner").affix({offset:{top:n,bottom:t}}),$(document).on("affixed.bs.affix",function(){updateTOCHeight(document.body.clientHeight-100)})}function initTOCDimension(){$(window).on("resize",function(){e&&clearTimeout(e),e=setTimeout(function(){var e=document.body.clientHeight-100;updateTOCHeight(e)},0)}),updateTOCHeight(document.body.clientHeight-100);var e,t=getScrollbarWidth();$(".post-toc").css("width","calc(100% + "+t+"px)")}function updateTOCHeight(e){e=e||"auto",$(".post-toc").css("max-height",e)}$(function(){var t=$(".header-inner").height()+10,n,s,e,o;$("#sidebar").css({'margin-top':t}).show(),n=parseInt($("#sidebar").css("margin-top")),s=parseInt($(".sidebar-inner").css("height")),e=n+s,o=$(".content-wrap").height(),o<e&&$(".content-wrap").css("min-height",e),$(".site-nav-toggle").on("click",function(){var e=$(".site-nav"),o=$(".toggle"),t="site-nav-on",i="toggle-close",n=e.hasClass(t),a=n?"slideUp":"slideDown",s=n?"removeClass":"addClass";e.stop()[a]("normal",function(){e[s](t),o[s](i)})}),registerBackTop(),initScrollSpy(),initAffix(),initTOCDimension(),$(".sidebar-nav-toc").click(function(){$(this).addClass("sidebar-nav-active"),$(this).next().removeClass("sidebar-nav-active"),$("."+$(this).next().attr("data-target")).toggle(500),$("."+$(this).attr("data-target")).toggle(500)}),$(".sidebar-nav-overview").click(function(){$(this).addClass("sidebar-nav-active"),$(this).prev().removeClass("sidebar-nav-active"),$("."+$(this).prev().attr("data-target")).toggle(500),$("."+$(this).attr("data-target")).toggle(500)})})</script>
+<script src=//cdn.bootcdn.net/ajax/libs/imageviewer/0.1.0/viewer.min.js></script>
+<script type=text/javascript>$(function(){$(".post-body").viewer()})</script>
+<script src=//cdn.jsdelivr.net/npm/leancloud-storage@4.6.1/dist/av-min.js></script>
+<script type=text/javascript>function showTime(s){var t=new AV.Query(s),e=[],n=$(".leancloud_visitors");n.each(function(){e.push($(this).attr("id").trim())}),t.containedIn("url",e),t.find().then(s=>{var o=".leancloud-visitors-count",t,r,i,l,a,c;if(s.length==0){n.find(o).text(0);return}for(t=0;t<s.length;t++)r=s[t],i=r.get("url"),l=r.get("time"),a=document.getElementById(i),$(a).find(o).text(l);for(t=0;t<e.length;t++)i=e[t],a=document.getElementById(i),c=$(a).find(o),c.text()==''&&c.text(0)},e=>{console.log("Query vistors failed: "+e)})}function addCount(s){var t=$(".leancloud_visitors"),e=t.attr("id").trim(),o=t.attr("data-flag-title").trim(),n=new AV.Query("Counter");n.equalTo("url",e),n.find().then(i=>{if(i.length>0){var a=i[0],n,t;a.increment("time",1),a.save(null,{query:new AV.Query("Counter").equalTo("url",e),fetchWhenSave:!0}).then(t=>{var n=$(document.getElementById(e));n.find(".leancloud-visitors-count").text(t.get("time"))},e=>{console.log("Update vistor failed: "+e)})}else n=new AV.ACL,n.setPublicReadAccess(!0),n.setPublicWriteAccess(!0),t=new s,t.set("title",o),t.set("url",e),t.set("time",1),t.setACL(n),t.save().then(s=>{var n=$(document.getElementById(e));n.find(".leancloud-visitors-count").text(t.get("time"))},e=>{console.log("Save new vistor failed: "+e)})})}$(function(){AV.init({appId:"",appKey:"",serverURL:""});const e=AV.Object.extend("Counter");$(".leancloud_visitors").length==1?addCount(e):$(".post-title-link").length>1&&showTime(e)})</script>
+<script type=text/javascript>(function(){var e=document.createElement("script");e.type="text/javascript",e.async=!0,e.setAttribute("issue-term","pathname"),e.setAttribute("theme","github-light"),e.setAttribute("repo","Reisen1969/Reisen1969.github.io"),e.crossorigin="anonymous",e.src="https://utteranc.es/client.js",document.getElementById("ucomments").appendChild(e)})()</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.2/MathJax.js?config=TeX-MML-AM_SVG"></script>
 <script>(function(){var e=document.createElement("script"),t,n=window.location.protocol.split(":")[0];n==="https"?e.src="https://zz.bdstatic.com/linksubmit/push.js":e.src="http://push.zhanzhang.baidu.com/push.js",t=document.getElementsByTagName("script")[0],t.parentNode.insertBefore(e,t)})()</script>
 </body></html>

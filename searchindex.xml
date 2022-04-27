@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8" standalone="yes"?><search><entry><title>riscv 启动分析</title><url>http://rayrain.xyz/post/riscvhead/</url><categories/><tags><tag>riscv</tag><tag>kernel</tag></tags><content type="html"> 简单分析了下 relocate 和 setup_vm
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><search><entry><title>C++记录</title><url>http://rayrain.xyz/post/c++test/</url><categories/><tags><tag>C</tag><tag>CPP</tag></tags><content type="html"> cin读入逗号分隔的数字 #include&lt;bits/stdc++.h> using namespace std; int main() { vector&lt;int> data; string s; getline(cin,s); istringstream input; input.str(s); for(string line;getline(input,line,',');) { data.push_back(stoi(line)); } int sum = 0; for(auto i:data) sum+=i; cout&lt;&lt;sum; return 0; }</content></entry><entry><title>riscv 启动分析</title><url>http://rayrain.xyz/post/riscvhead/</url><categories/><tags><tag>riscv</tag><tag>kernel</tag></tags><content type="html"> 简单分析了下 relocate 和 setup_vm
 首先是 setup_vm , 它设置了两个页表:
 early_pg_dir,将内核自身处于的连续物理内存区域映射到位于PAGE_OFFSET的虚拟内存地址上 而FIXMAP映射并没有映射全部的FIXMAP，而是仅仅影射了FIX_FDT部分，让后续的代码可以访问设备树。
 trampoline_pg_dir 将PAGE_OFFSET后长为PMD_SIZE的区域映射到load_pa，即内核起始被装载后的起始物理内存地址。
