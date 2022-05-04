@@ -34,3 +34,9 @@ fi
 
 
 
+## 命令行里的循环
+
+```
+while true ; do ./a.out ; done
+```
+

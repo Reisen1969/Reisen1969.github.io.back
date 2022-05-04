@@ -1,4 +1,34 @@
-<?xml version="1.0" encoding="utf-8" standalone="yes"?><search><entry><title>面试</title><url>http://rayrain.xyz/post/interview/</url><categories/><tags><tag>interview</tag></tags><content type="html"> C/C++相关 static 关键字 修饰局部变量, 修饰全局变量, 修饰成员变量, 修饰普通函数, 修饰成员函数, 修饰类,this指针等 const 关键字 修饰变量，说明该变量不可以被改变； 修饰指针，分为指向常量的指针（pointer to const）和自身是常量的指针（常量指针，const pointer）； 修饰引用，指向常量的引用（reference to const），用于形参类型，即避免了拷贝，又避免了函数对值的修改； 修饰成员函数，说明该成员函数内不能修改成员变量。 宏和常量的区别 宏定义 #define const 常量 宏定义，相当于字符替换 常量声明 预处理器处理 编译器处理 无类型安全检查 有类型安全检查 不分配内存 要分配内存 存储在代码段 存储在数据段 可通过 #undef 取消 不可取消 内存 栈stack, 只要出现花括号,就会开辟新栈 堆heap 未初始化全局变量bss, 初始化全局变量,存放全局数据和静态数据,又可细分为可读和可写区 代码段text,只读 内存泄漏 堆栈溢出
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><search><entry><title>并行编程</title><url>http://rayrain.xyz/post/parallel/</url><categories/><tags><tag>多核</tag></tags><content type="html"> 参考:[C++11中的内存模型][https://www.codedump.info/post/20191214-cxx11-memory-model-1/]
+多核CPU架构 顺序一致性Sequential Consistency 每个处理器的执行顺序和代码中的顺序（program order）一样。 所有处理器都只能看到一个单一的操作执行顺序。 实际上还是相当于同一时间只有一个线程在工作，这种保证导致了程序是低效的，无法充分利用上多核的优点。
+全存储排序（Total Store Ordering, 简称TSO） 在处理核心中增加写缓存，一个写操作只要写入到本核心的写缓存中就可以返回
+松弛型内存模型（Relaxed memory models） 在松散型的内存模型中，编译器可以在满足程序单线程执行结果的情况下进行重排序（reorder),程序的执行顺序就不见得和代码中编写的一样了
+内存栅栏（memory barrier） 由于有了缓冲区的出现，导致一些操作不用到内存就可以返回继续执行后面的操作，为了保证某些操作必须是写入到内存之后才执行，就引入了内存栅栏（memory barrier，又称为memory fence）操作。内存栅栏指令保证了，在这条指令之前所有的内存操作的结果，都在这个指令之后的内存操作指令被执行之前，写入到内存中。也可以换另外的角度来理解内存栅栏指令的作用：显式的在程序的某些执行点上保证SC。
+关系术语 sequenced-before sequenced-before用于表示单线程之间，两个操作上的先后顺序，这个顺序是非对称、可以进行传递的关系。
+它不仅仅表示两个操作之间的先后顺序，还表示了操作结果之间的可见性关系。两个操作A和操作B，如果有A sequenced-before B，除了表示操作A的顺序在B之前，还表示了操作A的结果操作B可见。
+happens-before 与sequenced-before不同的是，happens-before关系表示的不同线程之间的操作先后顺序，同样的也是非对称、可传递的关系。
+如果A happens-before B，则A的内存状态将在B操作执行之前就可见。在上一篇文章中，某些情况下一个写操作只是简单的写入内存就返回了，其他核心上的操作不一定能马上见到操作的结果，这样的关系是不满足happens-before的。
+synchronizes-with synchronizes-with关系强调的是变量被修改之后的传播关系（propagate），即如果一个线程修改某变量的之后的结果能被其它线程可见，那么就是满足synchronizes-with关系的。
+显然，满足synchronizes-with关系的操作一定满足happens-before关系了。
+C++11内存模型 enum memory_order { memory_order_relaxed, //宽松 memory_order_consume, memory_order_acquire, //用来修饰一个读操作，表示在本线程中，所有后续的关于此变量的内存操作都必须在本条原子操作完成后执行。 memory_order_release, //用来修饰一个写操作，表示在本线程中，所有之前的针对该变量的内存操作完成后才能执行本条原子操作。 memory_order_acq_rel, //同时包含memory_order_acquire和memory_order_release标志 memory_order_seq_cst //一致性内存模型 默认 }; 原子操作分为三类
+读load: memory_order_relaxed memory_order_consume memory_order_acquire memory_order_seq_cst
+写store: memory_order_relaxed memory_order_release memory_order_seq_cst
+读-改-写 :以上全部
+memory_order_relaxed 宽松顺序
+针对一个变量的读写操作是原子操作； 不同线程之间针对该变量的访问操作先后顺序不能得到保证，即有可能乱序。 x = 0; y = 0; // Thread 1: r1 = y.load(std::memory_order_relaxed); // A x.store(r1, std::memory_order_relaxed); // B // Thread 2: r2 = x.load(std::memory_order_relaxed); // C y.store(42, std::memory_order_relaxed); // D 可能会出现r1 = r2 = 42 的结果
+这个内存模型的典型应用是计数器递增
+memory_order_acquire 获得操作
+用来修饰一个读操作，表示在本线程中，所有后续的关于此变量的内存操作都必须在本条原子操作完成后执行
+如 lock()
+memory_order_release 释放操作
+用来修饰一个写操作，表示在本线程中，所有之前的针对该变量的内存操作完成后才能执行本条原子操作。
+如unlock()
+memory_order_acq_rel memory_order_consume 消费操作
+上方的acq和rel的粒度太大了
+#include &lt;thread> #include &lt;atomic> #include &lt;cassert> #include &lt;string> std::atomic&lt;std::string*> ptr; int data; void producer() { std::string* p = new std::string("Hello"); data = 42; ptr.store(p, std::memory_order_release); } void consumer() { std::string* p2; while (!(p2 = ptr.load(std::memory_order_consume))) ; assert(*p2 == "Hello"); // 绝无出错： *p2 从 ptr 携带依赖 assert(data == 42); // 可能也可能不会出错： data 不从 ptr 携带依赖 } int main() { std::thread t1(producer); std::thread t2(consumer); t1.join(); t2.join(); } memory_order_seq_cst // 线程 1 ： x.store(1, std::memory_order_seq_cst); // A y.store(1, std::memory_order_release); // B // 线程 2 ： r1 = y.fetch_add(1, std::memory_order_seq_cst); // C r2 = y.load(std::memory_order_relaxed); // D // 线程 3 ： y.store(3, std::memory_order_seq_cst); // E r3 = x.load(std::memory_order_seq_cst); // F 与volatile的关系</content></entry><entry><title>常用的网站</title><url>http://rayrain.xyz/post/web/</url><categories/><tags><tag>网站</tag></tags><content type="html"> 观察编译器背后行为的网站 https://godbolt.org/ https://www.godbolt.ms/
+cpp的手册 https://en.cppreference.com/w/cpp
+在线编译器 https://www.onlinegdb.com/online_c++_compiler
+在线正则表达式 https://regex101.com/
+ascii画图 https://asciiflow.com/legacy/</content></entry><entry><title>面试</title><url>http://rayrain.xyz/post/interview/</url><categories/><tags><tag>interview</tag></tags><content type="html"> C/C++相关 static 关键字 修饰局部变量, 修饰全局变量, 修饰成员变量, 修饰普通函数, 修饰成员函数, 修饰类,this指针等 const 关键字 修饰变量，说明该变量不可以被改变； 修饰指针，分为指向常量的指针（pointer to const）和自身是常量的指针（常量指针，const pointer）； 修饰引用，指向常量的引用（reference to const），用于形参类型，即避免了拷贝，又避免了函数对值的修改； 修饰成员函数，说明该成员函数内不能修改成员变量。 宏和常量的区别 宏定义 #define const 常量 宏定义，相当于字符替换 常量声明 预处理器处理 编译器处理 无类型安全检查 有类型安全检查 不分配内存 要分配内存 存储在代码段 存储在数据段 可通过 #undef 取消 不可取消 内存 栈stack, 只要出现花括号,就会开辟新栈 堆heap 未初始化全局变量bss, 初始化全局变量,存放全局数据和静态数据,又可细分为可读和可写区 代码段text,只读 内存泄漏 堆栈溢出
 指针和引用 引用和指针的区别, 引用只是别名,不需要分配内存空间,指针是变量,需要分配内存空间
 引用和指针的尺寸, 引用不占内存,指针的尺寸和cpu的字长有关.
 右值引用,表示什么意思?有什么用?[完美转发是什么?] 可以实现移动语义,实现移动构造函数,避免深拷贝
@@ -10,7 +40,9 @@ STL中好多地方都用到了这个,如unique_ptr只支持移动构造函数
 纯虚函数是什么? 构造函数和析构函数是否可以是虚函数?为什么? STL 简单介绍一下STL 一些容器的特性以及使用场景 vector 动态数组 ,size和capacity ,以及扩容机制,扩容完之后迭代器失效等等
 list 双向链表
 map和unordered_map
-介绍一下迭代器 如何避免临时对象生成 (可能是过时的)
+介绍一下迭代器
+new delete 智能指针
+如何避免临时对象生成 (可能是过时的)
 临时对象一般是在栈上生成的,源码中不可见的对象,会多调用一次构造和析构函数
 传参和返回时,尽量使用引用传递而不是值传递, 实参和形参要类型匹配,不要发生隐式类型转换,比如使用显式关键字explicit 单片机相关 C51等简单的单片机,问一下中断的概念
 STM32等ARM核的高级单片机
@@ -35,7 +67,8 @@ re: ry\B str: history 无法匹配
 re: \Bst\B str: history 可以匹配到中间的字符
 匹配文件的开头 \A 只能匹配文件的开头
 匹配文件的结尾 \Z 只能匹配文件的结尾
-匹配一行的开头 ^ 匹配一行的结尾 $ 匹配某个函数 main_\w+_start\(\) main_AA_start() main_BB_start() main_CC_start()</content></entry><entry><title>linux相关工具</title><url>http://rayrain.xyz/post/linux_tools/</url><categories/><tags><tag>linux</tag></tags><content type="html"> find - 递归地在层次目录中处理文件 find [path...] [expression] -type b:特殊块文件 缓冲的 c:特殊字符文件 不缓冲 d:目录 p:命名管道 f:普通文件 l:符号链接 s:套接字 //设置递归深度 -maxdepth 1 //在当前目录下搜索 Videos的文件夹 默认递归 find ./ -type d -name "Videos" grep - 打印匹配给定模式的行 grep [options] PATTERN [FILE...] grep [options] [-e PATTERN | -f FILE] [FILE...] -r 递归 -n 在输出的每行前面加上它所在的文件中它的行号 -i 忽略大小写 -I 处理一个二进制文件，但是认为它不包含匹配的内容。 //递归的查找 main 字符串 grep -rn main</content></entry><entry><title>shell脚本用法</title><url>http://rayrain.xyz/post/shell/</url><categories/><tags><tag>linux</tag><tag>shell</tag></tags><content type="html"> 分支 if [[ $1 == 'qd' ]]; then echo '1' elif [[ $1 == 'qi' ]]; then echo '2' elif [[ $1 == 'ob' ]]; then echo '3' else echo 'error' fi 传入参数 使用 $1 $2 $3 $4表示</content></entry><entry><title>使用qemu启动riscv64 kernel</title><url>http://rayrain.xyz/post/riscv_kernel/</url><categories/><tags><tag>riscv</tag><tag>kernel</tag><tag>qemu</tag></tags><content type="html"> 在这里只是记录一下,方便以后查阅
+匹配一行的开头 ^ 匹配一行的结尾 $ 匹配某个函数 main_\w+_start\(\) main_AA_start() main_BB_start() main_CC_start()</content></entry><entry><title>linux相关工具</title><url>http://rayrain.xyz/post/linux_tools/</url><categories/><tags><tag>linux</tag></tags><content type="html"> find - 递归地在层次目录中处理文件 find [path...] [expression] -type b:特殊块文件 缓冲的 c:特殊字符文件 不缓冲 d:目录 p:命名管道 f:普通文件 l:符号链接 s:套接字 //设置递归深度 -maxdepth 1 //在当前目录下搜索 Videos的文件夹 默认递归 find ./ -type d -name "Videos" grep - 打印匹配给定模式的行 grep [options] PATTERN [FILE...] grep [options] [-e PATTERN | -f FILE] [FILE...] -r 递归 -n 在输出的每行前面加上它所在的文件中它的行号 -i 忽略大小写 -I 处理一个二进制文件，但是认为它不包含匹配的内容。 //递归的查找 main 字符串 grep -rn main</content></entry><entry><title>shell脚本用法</title><url>http://rayrain.xyz/post/shell/</url><categories/><tags><tag>linux</tag><tag>shell</tag></tags><content type="html"> 分支 if [[ $1 == 'qd' ]]; then echo '1' elif [[ $1 == 'qi' ]]; then echo '2' elif [[ $1 == 'ob' ]]; then echo '3' else echo 'error' fi 传入参数 使用 $1 $2 $3 $4表示
+命令行里的循环 while true ; do ./a.out ; done</content></entry><entry><title>使用qemu启动riscv64 kernel</title><url>http://rayrain.xyz/post/riscv_kernel/</url><categories/><tags><tag>riscv</tag><tag>kernel</tag><tag>qemu</tag></tags><content type="html"> 在这里只是记录一下,方便以后查阅
 本文的内容来源
 riscv官方网页
 解决文件系统问题
