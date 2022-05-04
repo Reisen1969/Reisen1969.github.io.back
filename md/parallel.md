@@ -11,7 +11,9 @@ tags = [
 
 +++
 
-参考:[C++11中的内存模型][https://www.codedump.info/post/20191214-cxx11-memory-model-1/]
+参考:[C++11中的内存模型](https://www.codedump.info/post/20191214-cxx11-memory-model-1/)
+
+https://paul.pub/cpp-memory-model/
 
 ## 多核CPU架构
 
@@ -186,3 +188,5 @@ r3 = x.load(std::memory_order_seq_cst); // F
 ```
 
 ### 与volatile的关系
+
+[https://www.codedump.info/post/20191214-cxx11-memory-model-1/]: 
