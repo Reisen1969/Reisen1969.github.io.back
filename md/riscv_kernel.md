@@ -22,6 +22,8 @@ tags = [
 
 [编译busybox](https://www.cnblogs.com/jzcn/p/14932093.html)
 
+[9p](https://wiki.qemu.org/Documentation/9psetup)
+
 ## 获取源码
 
 ```
