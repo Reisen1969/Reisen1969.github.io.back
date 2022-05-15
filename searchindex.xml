@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8" standalone="yes"?><search><entry><title>并行编程</title><url>http://rayrain.xyz/post/parallel/</url><categories/><tags><tag>多核</tag></tags><content type="html"> 参考:C++11中的内存模型
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><search><entry><title>C++并发</title><url>http://rayrain.xyz/post/cpp_concurrency/</url><categories/><tags><tag>C</tag><tag>CPP</tag></tags><content type="html"/></entry><entry><title>并行编程</title><url>http://rayrain.xyz/post/parallel/</url><categories/><tags><tag>多核</tag></tags><content type="html"> 参考:C++11中的内存模型
 https://paul.pub/cpp-memory-model/
 多核CPU架构 顺序一致性Sequential Consistency 每个处理器的执行顺序和代码中的顺序（program order）一样。 所有处理器都只能看到一个单一的操作执行顺序。 实际上还是相当于同一时间只有一个线程在工作，这种保证导致了程序是低效的，无法充分利用上多核的优点。
 全存储排序（Total Store Ordering, 简称TSO） 在处理核心中增加写缓存，一个写操作只要写入到本核心的写缓存中就可以返回
@@ -25,7 +25,34 @@ memory_order_release 释放操作
 如unlock()
 memory_order_acq_rel memory_order_consume 消费操作
 上方的acq和rel的粒度太大了
-#include &lt;thread> #include &lt;atomic> #include &lt;cassert> #include &lt;string> std::atomic&lt;std::string*> ptr; int data; void producer() { std::string* p = new std::string("Hello"); data = 42; ptr.store(p, std::memory_order_release); } void consumer() { std::string* p2; while (!(p2 = ptr.load(std::memory_order_consume))) ; assert(*p2 == "Hello"); // 绝无出错： *p2 从 ptr 携带依赖 assert(data == 42); // 可能也可能不会出错： data 不从 ptr 携带依赖 } int main() { std::thread t1(producer); std::thread t2(consumer); t1.join(); t2.join(); } memory_order_seq_cst // 线程 1 ： x.store(1, std::memory_order_seq_cst); // A y.store(1, std::memory_order_release); // B // 线程 2 ： r1 = y.fetch_add(1, std::memory_order_seq_cst); // C r2 = y.load(std::memory_order_relaxed); // D // 线程 3 ： y.store(3, std::memory_order_seq_cst); // E r3 = x.load(std::memory_order_seq_cst); // F 与volatile的关系 [https://www.codedump.info/post/20191214-cxx11-memory-model-1/]:</content></entry><entry><title>常用的网站</title><url>http://rayrain.xyz/post/web/</url><categories/><tags><tag>网站</tag></tags><content type="html"> 观察编译器背后行为的网站 https://godbolt.org/ https://www.godbolt.ms/
+#include &lt;thread> #include &lt;atomic> #include &lt;cassert> #include &lt;string> std::atomic&lt;std::string*> ptr; int data; void producer() { std::string* p = new std::string("Hello"); data = 42; ptr.store(p, std::memory_order_release); } void consumer() { std::string* p2; while (!(p2 = ptr.load(std::memory_order_consume))) ; assert(*p2 == "Hello"); // 绝无出错： *p2 从 ptr 携带依赖 assert(data == 42); // 可能也可能不会出错： data 不从 ptr 携带依赖 } int main() { std::thread t1(producer); std::thread t2(consumer); t1.join(); t2.join(); } memory_order_seq_cst // 线程 1 ： x.store(1, std::memory_order_seq_cst); // A y.store(1, std::memory_order_release); // B // 线程 2 ： r1 = y.fetch_add(1, std::memory_order_seq_cst); // C r2 = y.load(std::memory_order_relaxed); // D // 线程 3 ： y.store(3, std::memory_order_seq_cst); // E r3 = x.load(std::memory_order_seq_cst); // F 与volatile的关系 [https://www.codedump.info/post/20191214-cxx11-memory-model-1/]:
+C++线程库 并发:只存在一个处理器
+并行:存在多个处理器
+并行是并发的子集,统称为并发
+进程（英语：process），是指计算机中已运行的程序。进程为曾经是分时系统的基本运作单位。在面向进程设计的系统（如早期的UNIX，Linux 2.4及更早的版本）中，进程是程序的基本执行实体；
+线程（英语：thread）是操作系统能够进行运算调度的最小单位。它被包含在进程之中，是进程中的实际运作单位。
+在默认的情况下，我们写的代码都是在进程的主线程中运行，除非开发者在程序中创建了新的线程。
+当我们只有一个处理器时，所有的进程或线程会分时占用这个处理器。但如果系统中存在多个处理器时，则就可能有多个任务并行的运行在不同的处理器上。
+任务会在何时占有处理器，通常是由操作系统的调度策略决定的
+多线程API 由操作系统提供.
+C++ 11 中,增加了多线程的支持
+创建线程 thread
+join :主线程等待这个线程结束
+detach 让线程独立运行 ,成为守护线程
+访问共享数据的代码片段称之为临界区（critical section）
+互斥锁 mutex 互斥量 加锁 , 加锁和解锁是有代价的 ,锁的粒度尽量要小
+我们用锁的粒度（granularity）来描述锁的范围。细粒度（fine-grained）是指锁保护较小的范围，粗粒度（coarse-grained）是指锁保护较大的范围。出于性能的考虑，我们应该保证锁的粒度尽可能的细。并且，不应该在获取锁的范围内执行耗时的操作，例如执行IO。如果是耗时的运算，也应该尽可能的移到锁的外面。
+条件变量 wait
+notify_all
+本质上是线程间 共享的全局flag
+异步 使用async 而不是 thread 启动一个任务
+它会返回一个future对象。future用来存储异步任务的执行结果
+需要注意的是，默认情况下，async是启动一个新的线程，还是以同步的方式（不启动新的线程）运行任务，这一点标准是没有指定的，由具体的编译器决定。如果希望一定要以新的线程来异步执行任务，可以通过launch::async来明确说明。
+future 来存储一个异步任务的执行结果, 哪怕这个异步任务还没开始执行,
+就可以定义一个 future来接受 这个异步任务的结果
+需要进行一次长时间的运算,但是你现在不急的要,可以启动一个新线程来执行这个运算,
+但是 thread 并没有机制获取返回值, 这里就需要async 来实现了.
+C++ 中的算法可以加上一个 新参数,并行执行算法</content></entry><entry><title>常用的网站</title><url>http://rayrain.xyz/post/web/</url><categories/><tags><tag>网站</tag></tags><content type="html"> 观察编译器背后行为的网站 https://godbolt.org/ https://www.godbolt.ms/
 cpp的手册 https://en.cppreference.com/w/cpp
 在线编译器 https://www.onlinegdb.com/online_c++_compiler
 在线正则表达式 https://regex101.com/
@@ -49,7 +76,7 @@ new delete 智能指针
 STM32等ARM核的高级单片机
 中断 中断向量表 DMA等问题
 QT相关 父类被析构时,需不需要手动析构子类对象,为什么? 对象树机制
-操作系统相关</content></entry><entry><title>C++记录</title><url>http://rayrain.xyz/post/c++test/</url><categories/><tags><tag>C</tag><tag>CPP</tag></tags><content type="html"> cin读入逗号分隔的数字 #include&lt;bits/stdc++.h> using namespace std; int main() { vector&lt;int> data; string s; getline(cin,s); istringstream input; input.str(s); for(string line;getline(input,line,',');) { data.push_back(stoi(line)); } int sum = 0; for(auto i:data) sum+=i; cout&lt;&lt;sum; return 0; }</content></entry><entry><title>riscv 启动分析</title><url>http://rayrain.xyz/post/riscvhead/</url><categories/><tags><tag>riscv</tag><tag>kernel</tag></tags><content type="html"> 简单分析了下 relocate 和 setup_vm
+操作系统相关</content></entry><entry><title>C++刷题记录</title><url>http://rayrain.xyz/post/c++test/</url><categories/><tags><tag>C</tag><tag>CPP</tag></tags><content type="html"> 一些算法 技巧 对于算法来说,迭代器的区间都是前闭后开 计算某个区间之和accumulate 从迭代器获得index : i - num.begin() distance(num.begin(),i) 操作string isalnum,判断单个字符是否是 字母或数字 tolower 单个字符转小写 牛顿法平方根 public int mySqrt(int x) { int start = 0, end = x; int res = -1; while (start &lt;= end) { int mid = start + (end - start)/2; if ((long)mid * mid &lt;= x) { start = mid + 1; res = mid; } else { end = mid -1; } } return res; } cin读入逗号分隔的数字 #include&lt;bits/stdc++.h> using namespace std; int main() { vector&lt;int> data; string s; getline(cin,s); istringstream input; input.str(s); for(string line;getline(input,line,',');) { data.push_back(stoi(line)); } int sum = 0; for(auto i:data) sum+=i; cout&lt;&lt;sum; return 0; } leetcode版本的链表与使用 #include&lt;bits/stdc++.h> using namespace std; struct ListNode { int val; ListNode *next; ListNode() : val(0), next(nullptr) {} ListNode(int x) : val(x), next(nullptr) {} ListNode(int x, ListNode *next) : val(x),next(next) {} }; int main() { ListNode* head = new ListNode(0); ListNode* point = head; for(int i = 1; i &lt; 10; i++) { point->next = new ListNode(i); point = point->next; } point = head; while(1) { cout&lt;&lt; point->val &lt;&lt; endl; if (point->next) point = point->next; else break; } return 0; }</content></entry><entry><title>riscv 启动分析</title><url>http://rayrain.xyz/post/riscvhead/</url><categories/><tags><tag>riscv</tag><tag>kernel</tag></tags><content type="html"> 简单分析了下 relocate 和 setup_vm
 首先是 setup_vm , 它设置了两个页表:
 early_pg_dir,将内核自身处于的连续物理内存区域映射到位于PAGE_OFFSET的虚拟内存地址上 而FIXMAP映射并没有映射全部的FIXMAP，而是仅仅影射了FIX_FDT部分，让后续的代码可以访问设备树。
 trampoline_pg_dir 将PAGE_OFFSET后长为PMD_SIZE的区域映射到load_pa，即内核起始被装载后的起始物理内存地址。
