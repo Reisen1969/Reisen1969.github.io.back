@@ -8,6 +8,7 @@ math= true
 tags = [
     "C","CPP"
 ]
+
 +++
 
 ## 多线程编程
@@ -375,6 +376,10 @@ synchronizes-with描述的是一种状态传播（propagate）关系。如果A s
 
 ## 原子
 
+可能是使用的互斥量实现,也可能是使用的对应硬件平台的原子指令实现.
+
+`is_lock_free()` 可以用来查询是否是无锁的.
+
 | 函数                                          | #_flag | #_bool | 指针类型 | 整形类型 | 说明                                   |
 | :-------------------------------------------- | :----- | :----- | :------- | :------- | :------------------------------------- |
 | test_and_set                                  | Y      |        |          |          | 将flag设为true并返回原先的值           |
@@ -646,4 +651,217 @@ void read_y_then_x()
 如下图的三种情况，第一种可能会被优化成第二种。但是第二种情况不会被优化成第三种：
 
 ![img](https://paul-pub.oss-cn-beijing.aliyuncs.com/2019/2019-12-05-cpp-memory-model/mutex-fence.png)
+
+## GCC官方的解释:
+
+http://gcc.gnu.org/wiki/Atomic/GCCMM/AtomicSync
+
+#### Sequentially Consistent 顺序一致性
+
+```
+ -Thread 1-       -Thread 2-
+ y = 1            if (x.load() == 2)
+ x.store (2);        assert (y == 1)
+```
+
+
+
+断言一定能成功,在线程1中,y的存储 happens-before x的存储
+
+线程2看到的也一样.
+
+
+
+```
+             a = 0
+             y = 0
+             b = 1
+ -Thread 1-              -Thread 2-
+ x = a.load()            while (y.load() != b)
+ y.store (b)                ;
+ while (a.load() == x)   a.store(1)
+    ;
+```
+
+线程2循环,等待y的值发生变化,然后改变a
+
+线程1正在等待a发生变化
+
+```
+ -Thread 1-       -Thread 2-                   -Thread 3-
+ y.store (20);    if (x.load() == 10) {        if (y.load() == 10)
+ x.store (10);      assert (y.load() == 20)      assert (x.load() == 10)
+                    y.store (10)
+                  }
+```
+
+两个断言都一定成功
+
+#### Relaxed宽松顺序
+
+这个模型消除了 "再发生之前"的限制, 减少了同步
+
+```
+-Thread 1-
+y.store (20, memory_order_relaxed)
+x.store (10, memory_order_relaxed)
+
+-Thread 2-
+if (x.load (memory_order_relaxed) == 10)
+  {
+    assert (y.load(memory_order_relaxed) == 20) /* assert A */
+    y.store (10, memory_order_relaxed)
+  }
+
+-Thread 3-
+if (y.load (memory_order_relaxed) == 10)
+  assert (x.load(memory_order_relaxed) == 10) /* assert B */
+```
+
+两个断言可能会失败.
+
+不存在任何的happens-before, 任何一个线程都不依赖另一个线程的顺序.
+
+唯一存在的顺序:线程2看到的线程1中一个变量的值(如x),那么它就无法看到x的更早的值.
+
+```
+-Thread 1-
+x.store (1, memory_order_relaxed)
+x.store (2, memory_order_relaxed)
+
+-Thread 2-
+y = x.load (memory_order_relaxed)
+z = x.load (memory_order_relaxed)
+assert (y <= z)
+```
+
+断言一定成功
+
+线程2只能看到最新值,无法看到旧值.
+
+
+
+在一定时间内,realxed load可以看到另一个线程的realxed store,这意味着,realxed 操作需要刷新缓存
+
+
+
+当编程者只是希望一个变量是原子的,而不需要和其他线程进行同步时,就可以使用realxed模式
+
+#### Acquire/Release 获得释放一致性
+
+这个模式是前两种的混合, 它和sequentially consistent 相似,
+
+它只对依赖的变量应用happens-before关系
+
+- 同一个对象上的原子操作不允许被乱序。
+- release操作禁止了所有在它之前的读写操作与在它之后的写操作乱序。
+- acquire操作禁止了所有在它之前的读操作与在它之后的读写操作乱序。
+
+```
+-Thread 1-
+ y.store (20, memory_order_release);
+
+ -Thread 2-
+ x.store (10, memory_order_release);
+
+ -Thread 3-
+ assert (y.load (memory_order_acquire) == 20 && x.load (memory_order_acquire) == 0)
+
+ -Thread 4-
+ assert (y.load (memory_order_acquire) == 0 && x.load (memory_order_acquire) == 10)
+```
+
+
+
+
+
+```
+ -Thread 1-
+ y = 20;
+ x.store (10, memory_order_release);
+
+ -Thread 2-
+ if (x.load(memory_order_acquire) == 10)
+    assert (y == 20);
+```
+
+线程1中,对y的写操作,不能乱序
+
+线程2中,对y的读操作,不能乱序
+
+断言一定成功
+
+#### Consume 消费
+
+比较特殊,不推荐使用
+
+```
+ -Thread 1-
+ n = 1
+ m = 1
+ p.store (&n, memory_order_release)
+
+ -Thread 2-
+ t = p.load (memory_order_acquire);
+ assert( *t == 1 && m == 1 );
+
+ -Thread 3-
+ t = p.load (memory_order_consume);
+ assert( *t == 1 && m == 1 );
+```
+
+线程2中的断言成功
+
+因为m的存储发生在p.store之前.
+
+线程3中的断言失败
+
+#### 全面总结
+
+```
+ -Thread 1-       -Thread 2-                   -Thread 3-
+ y.store (20);    if (x.load() == 10) {        if (y.load() == 10)
+ x.store (10);      assert (y.load() == 20)      assert (x.load() == 10)
+                    y.store (10)
+                  }
+```
+
+如果是顺序一致性同步的话,必须在系统中刷新所有可见变量,以至于所有线程看到相同的状态.
+
+断言成立
+
+
+
+如果是acq rel模式的话,只需要同步涉及的两个线程,这意味着同步值不能与其他线程交换.
+
+线程1和线程2因为 x.load 同步,所以断言成立
+
+线程2和线程3因为 y.load同步,但是线程1和线程3没有同步,所以x的值不一定是10,断言可能会失败
+
+
+
+如果是relaxed,所有断言都有可能失败,因为根本没有同步.
+
+#### 混合模式
+
+```
+-Thread 1-
+y.store (20, memory_order_relaxed)
+x.store (10, memory_order_seq_cst)
+
+-Thread 2-
+if (x.load (memory_order_relaxed) == 10)
+  {
+    assert (y.load(memory_order_seq_cst) == 20) /* assert A */
+    y.store (10, memory_order_relaxed)
+  }
+
+-Thread 3-
+if (y.load (memory_order_acquire) == 10)
+  assert (x.load(memory_order_acquire) == 10) /* assert B */
+```
+
+首先,不要这样做
+
+
 
