@@ -1,4 +1,11 @@
-<?xml version="1.0" encoding="utf-8" standalone="yes"?><search><entry><title>C++并发</title><url>http://rayrain.xyz/post/cpp_concurrency/</url><categories/><tags><tag>C</tag><tag>CPP</tag></tags><content type="html"> 多线程编程 并发:只存在一个处理器
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><search><entry><title>leetcode刷题</title><url>http://rayrain.xyz/post/leetcode/</url><categories/><tags><tag>C</tag><tag>CPP</tag></tags><content type="html"/></entry><entry><title>riscv裸机</title><url>http://rayrain.xyz/post/qemu1/</url><categories/><tags><tag>qemu</tag></tags><content type="html"> https://mth.st/blog/riscv-qemu/
+使用virit机器启动, -s 表示 启动gdb server 默认端口1234 -S 表示CPU不立即开始运行
+/qemu-system-riscv64 -machine virt -nographic -s -S 编译riscv程序
+.section .init .global _start _start: li s1, 0x10000000 # s1 := 0x1000_0000 la s2, message # s2 := &lt;message> addi s3, s2, 14 # s3 := s2 + 14 1: lb s4, 0(s2) # s4 := (s2) sb s4, 0(s1) # (s1) := s4 addi s2, s2, 1 # s2 := s2 + 1 blt s2, s3, 1b # if s2 &lt; s3, branch back to 1 .section .data message: .string "Hello, world!\n" $ riscv64-none-elf-as loop.s -g -o loop.elf $ riscv64-none-elf-objcopy -O binary loop.elf loop.img
+$ riscv64-none-elf-ld -o loop.linked.elf loop.elf $ riscv64-none-elf-objcopy -O binary loop.linked.elf loop.linked.img $ diff loop.img loop.linked.img
+riscv64-none-elf-ld &ndash;verbose > qemu-riscv64-virt.ld
+riscv64-none-elf-ld -T qemu-riscv64-virt.ld -o loop.linked.elf loop.elf
+看支持的硬件 qemu-system-riscv64 -machine help</content></entry><entry><title>C++并发</title><url>http://rayrain.xyz/post/cpp_concurrency/</url><categories/><tags><tag>C</tag><tag>CPP</tag></tags><content type="html"> 多线程编程 并发:只存在一个处理器
 并行:存在多个处理器
 并行是并发的子集,统称为并发
 进程（英语：process），是指计算机中已运行的程序。进程为曾经是分时系统的基本运作单位。在面向进程设计的系统（如早期的UNIX，Linux 2.4及更早的版本）中，进程是程序的基本执行实体；
@@ -115,7 +122,8 @@ Consume 消费 比较特殊,不推荐使用
 线程1和线程2因为 x.load 同步,所以断言成立
 线程2和线程3因为 y.load同步,但是线程1和线程3没有同步,所以x的值不一定是10,断言可能会失败
 如果是relaxed,所有断言都有可能失败,因为根本没有同步.
-混合模式 -Thread 1- y.store (20, memory_order_relaxed) x.store (10, memory_order_seq_cst) -Thread 2- if (x.load (memory_order_relaxed) == 10) { assert (y.load(memory_order_seq_cst) == 20) /* assert A */ y.store (10, memory_order_relaxed) } -Thread 3- if (y.load (memory_order_acquire) == 10) assert (x.load(memory_order_acquire) == 10) /* assert B */ 首先,不要这样做</content></entry><entry><title>并行编程</title><url>http://rayrain.xyz/post/parallel/</url><categories/><tags><tag>多核</tag></tags><content type="html"> 参考:C++11中的内存模型
+混合模式 -Thread 1- y.store (20, memory_order_relaxed) x.store (10, memory_order_seq_cst) -Thread 2- if (x.load (memory_order_relaxed) == 10) { assert (y.load(memory_order_seq_cst) == 20) /* assert A */ y.store (10, memory_order_relaxed) } -Thread 3- if (y.load (memory_order_acquire) == 10) assert (x.load(memory_order_acquire) == 10) /* assert B */ 首先,不要这样做
+1. 16472131 2. 82526461 3. 93023508 4. 09183796 5. 46548500 6. 32016383</content></entry><entry><title>并行编程</title><url>http://rayrain.xyz/post/parallel/</url><categories/><tags><tag>多核</tag></tags><content type="html"> 参考:C++11中的内存模型
 https://paul.pub/cpp-memory-model/
 多核CPU架构 顺序一致性Sequential Consistency 每个处理器的执行顺序和代码中的顺序（program order）一样。 所有处理器都只能看到一个单一的操作执行顺序。 实际上还是相当于同一时间只有一个线程在工作，这种保证导致了程序是低效的，无法充分利用上多核的优点。
 全存储排序（Total Store Ordering, 简称TSO） 在处理核心中增加写缓存，一个写操作只要写入到本核心的写缓存中就可以返回
