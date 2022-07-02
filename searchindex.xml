@@ -30,7 +30,7 @@ wait()来等待该异步任务结束
 get()获取该异步任务的结果
 async 假设你需要一个长时间的运算,但并不迫切的需要这个值,可以启动一个新线程来执行这个计算,但是thread 并没有机制获得返回值.
 可以使用async启动一个异步任务,而且会返回一个 future对象.
-#include &lt;future>#include &lt;iostream>int find_the_answer_to_ltuae() { return 42; } void do_other_stuff() {} int main() { std::future&lt;int> the_answer=std::async(find_the_answer_to_ltuae); do_other_stuff(); std::cout&lt;&lt;"The answer is "&lt;&lt;the_answer.get()&lt;&lt;std::endl; } async是否会启动一个新线程, 标准没有定义,由编译器决定,
+#include &lt;future> #include &lt;iostream> int find_the_answer_to_ltuae() { return 42; } void do_other_stuff() {} int main() { std::future&lt;int> the_answer=std::async(find_the_answer_to_ltuae); do_other_stuff(); std::cout&lt;&lt;"The answer is "&lt;&lt;the_answer.get()&lt;&lt;std::endl; } async是否会启动一个新线程, 标准没有定义,由编译器决定,
 如果一定要启动新线程,可以加入launch::async参数来说明.
 std::launch::async 在独立线程上执行
 std::launch::deferred 在wait或者get调用时执行 ,并不是独立线程
