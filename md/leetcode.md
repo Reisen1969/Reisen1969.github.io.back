@@ -6,7 +6,7 @@ description = "C"
 toc= true
 math= true
 tags = [
-    "C","CPP"
+    "C","CPP","leetcode"
 ]
 +++
 
