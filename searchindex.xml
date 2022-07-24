@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8" standalone="yes"?><search><entry><title>leetcode刷题</title><url>http://rayrain.xyz/post/leetcode/</url><categories/><tags><tag>C</tag><tag>CPP</tag></tags><content type="html"/></entry><entry><title>riscv裸机</title><url>http://rayrain.xyz/post/qemu1/</url><categories/><tags><tag>qemu</tag></tags><content type="html"> https://mth.st/blog/riscv-qemu/
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><search><entry><title>kernel config配置</title><url>http://rayrain.xyz/post/kernel_config/</url><categories/><tags><tag>kernel</tag></tags><content type="html"> todo</content></entry><entry><title>leetcode刷题</title><url>http://rayrain.xyz/post/leetcode/</url><categories/><tags><tag>C</tag><tag>CPP</tag></tags><content type="html"> 算法框架 遍历 数组的遍历 void traverse(int[] arr) { for (int i = 0; i &lt; arr.length; i++) { // 迭代访问 arr[i] } } 链表的遍历 /* 基本的单链表节点 */ class ListNode { int val; ListNode next; } void traverse(ListNode head) { for (ListNode p = head; p != null; p = p.next) { // 迭代访问 p.val } } void traverse(ListNode head) { // 递归访问 head.val traverse(head.next); } 二叉树遍历 /* 基本的 N 叉树节点 */ class TreeNode { int val; TreeNode[] children; } void traverse(TreeNode root) { for (TreeNode child : root.children) traverse(child); } void traverse(TreeNode root) { // 前序位置 traverse(root.left); // 中序位置 traverse(root.right); // 后序位置 } 滑动窗口 /* 滑动窗口算法框架 */ void slidingWindow(string s) { unordered_map&lt;char, int> window; int left = 0, right = 0; while (right &lt; s.size()) { // c 是将移入窗口的字符 char c = s[right]; // 增大窗口 right++; // 进行窗口内数据的一系列更新 ... /*** debug 输出的位置 ***/ printf("window: [%d, %d)\n", left, right); /********************/ // 判断左侧窗口是否要收缩 while (window needs shrink) { // d 是将移出窗口的字符 char d = s[left]; // 缩小窗口 left++; // 进行窗口内数据的一系列更新 ... } } }</content></entry><entry><title>riscv裸机</title><url>http://rayrain.xyz/post/qemu1/</url><categories/><tags><tag>qemu</tag></tags><content type="html"> https://mth.st/blog/riscv-qemu/
 使用virit机器启动, -s 表示 启动gdb server 默认端口1234 -S 表示CPU不立即开始运行
 /qemu-system-riscv64 -machine virt -nographic -s -S 编译riscv程序
 .section .init .global _start _start: li s1, 0x10000000 # s1 := 0x1000_0000 la s2, message # s2 := &lt;message> addi s3, s2, 14 # s3 := s2 + 14 1: lb s4, 0(s2) # s4 := (s2) sb s4, 0(s1) # (s1) := s4 addi s2, s2, 1 # s2 := s2 + 1 blt s2, s3, 1b # if s2 &lt; s3, branch back to 1 .section .data message: .string "Hello, world!\n" $ riscv64-none-elf-as loop.s -g -o loop.elf $ riscv64-none-elf-objcopy -O binary loop.elf loop.img
@@ -25,23 +25,160 @@ mutex互斥加锁
 wait
 notify_all
 本质上是线程间 共享的全局flag
-#include &lt;iostream> #include &lt;string> #include &lt;thread> #include &lt;mutex> #include &lt;condition_variable> std::mutex m; std::condition_variable cv; std::string data; bool ready = false; bool processed = false; void worker_thread() { // Wait until main() sends data std::unique_lock lk(m); cv.wait(lk, []{return ready;}); // after the wait, we own the lock. std::cout &lt;&lt; "Worker thread is processing data\n"; data += " after processing"; // Send data back to main() processed = true; std::cout &lt;&lt; "Worker thread signals data processing completed\n"; // Manual unlocking is done before notifying, to avoid waking up // the waiting thread only to block again (see notify_one for details) lk.unlock(); cv.notify_one(); } int main() { std::thread worker(worker_thread); data = "Example data"; // send data to the worker thread { std::lock_guard lk(m); ready = true; std::cout &lt;&lt; "main() signals data ready for processing\n"; } cv.notify_one(); // wait for the worker { std::unique_lock lk(m); cv.wait(lk, []{return processed;}); } std::cout &lt;&lt; "Back in main(), data = " &lt;&lt; data &lt;&lt; '\n'; worker.join(); } future future对象用来存储异步任务的执行结果,获取到这个对象的时候,可能异步任务还没执行.
+#include &lt;iostream>
+#include &lt;string>
+#include &lt;thread>
+#include &lt;mutex>
+#include &lt;condition_variable>
+std::mutex m;
+std::condition_variable cv;
+std::string data;
+bool ready = false;
+bool processed = false;
+void worker_thread()
+{
+// Wait until main() sends data
+std::unique_lock lk(m);
+cv.wait(lk, []{return ready;});
+// after the wait, we own the lock.
+std::cout &lt;&lt; "Worker thread is processing data\n";
+data += " after processing";
+// Send data back to main()
+processed = true;
+std::cout &lt;&lt; "Worker thread signals data processing completed\n";
+// Manual unlocking is done before notifying, to avoid waking up
+// the waiting thread only to block again (see notify_one for details)
+lk.unlock();
+cv.notify_one();
+}
+int main()
+{
+std::thread worker(worker_thread);
+data = "Example data";
+// send data to the worker thread
+{
+std::lock_guard lk(m);
+ready = true;
+std::cout &lt;&lt; "main() signals data ready for processing\n";
+}
+cv.notify_one();
+// wait for the worker
+{
+std::unique_lock lk(m);
+cv.wait(lk, []{return processed;});
+}
+std::cout &lt;&lt; "Back in main(), data = " &lt;&lt; data &lt;&lt; '\n';
+worker.join();
+}
+future future对象用来存储异步任务的执行结果,获取到这个对象的时候,可能异步任务还没执行.
 wait()来等待该异步任务结束
 get()获取该异步任务的结果
 async 假设你需要一个长时间的运算,但并不迫切的需要这个值,可以启动一个新线程来执行这个计算,但是thread 并没有机制获得返回值.
 可以使用async启动一个异步任务,而且会返回一个 future对象.
-#include &lt;future> #include &lt;iostream> int find_the_answer_to_ltuae() { return 42; } void do_other_stuff() {} int main() { std::future&lt;int> the_answer=std::async(find_the_answer_to_ltuae); do_other_stuff(); std::cout&lt;&lt;"The answer is "&lt;&lt;the_answer.get()&lt;&lt;std::endl; } async是否会启动一个新线程, 标准没有定义,由编译器决定,
+#include &lt;future>
+#include &lt;iostream>
+int find_the_answer_to_ltuae()
+{
+return 42;
+}
+void do_other_stuff()
+{}
+int main()
+{
+std::future&lt;int> the_answer=std::async(find_the_answer_to_ltuae);
+do_other_stuff();
+std::cout&lt;&lt;"The answer is "&lt;&lt;the_answer.get()&lt;&lt;std::endl;
+}
+async是否会启动一个新线程, 标准没有定义,由编译器决定,
 如果一定要启动新线程,可以加入launch::async参数来说明.
 std::launch::async 在独立线程上执行
 std::launch::deferred 在wait或者get调用时执行 ,并不是独立线程
 std::launch::async|std::launch::deferred 在wait或者get调用时执行 ,并独立线程执行
-auto f6=std::async(std::launch::async,Y(),1.2); // 在新线程上执行 auto f7=std::async(std::launch::deferred,baz,std::ref(x)); // 在wait()或get()调用时执行 auto f8=std::async( std::launch::deferred | std::launch::async, baz,std::ref(x)); // 实现选择执行方式 auto f9=std::async(baz,std::ref(x)); f7.wait(); // 调用延迟函数 promise 上面的例子,异步任务的结果是通过 return 返回的
+auto f6=std::async(std::launch::async,Y(),1.2); // 在新线程上执行
+auto f7=std::async(std::launch::deferred,baz,std::ref(x)); // 在wait()或get()调用时执行 auto f8=std::async( std::launch::deferred | std::launch::async, baz,std::ref(x)); // 实现选择执行方式
+auto f9=std::async(baz,std::ref(x));
+f7.wait(); // 调用延迟函数
+promise 上面的例子,异步任务的结果是通过 return 返回的
 但在一些时候，我们可能不能这么做：在得到任务结果之后，可能还有一些事情需要继续处理，例如清理工作。
 异步任务不再直接返回计算结果，而是增加了一个promise对象来存放结果。
 在任务计算完成之后，将总结过设置到promise对象上。一旦这里调用了set_value，其相关联的future对象就会就绪
-#include &lt;vector> #include &lt;thread> #include &lt;future> #include &lt;numeric> #include &lt;iostream> #include &lt;chrono> void accumulate(std::vector&lt;int>::iterator first, std::vector&lt;int>::iterator last, std::promise&lt;int> accumulate_promise) { int sum = std::accumulate(first, last, 0); accumulate_promise.set_value(sum); // Notify future } void do_work(std::promise&lt;void> barrier) { std::this_thread::sleep_for(std::chrono::seconds(1)); barrier.set_value(); } int main() { // Demonstrate using promise&lt;int> to transmit a result between threads. std::vector&lt;int> numbers = { 1, 2, 3, 4, 5, 6 }; std::promise&lt;int> accumulate_promise; std::future&lt;int> accumulate_future = accumulate_promise.get_future(); std::thread work_thread(accumulate, numbers.begin(), numbers.end(), std::move(accumulate_promise)); // future::get() will wait until the future has a valid result and retrieves it. // Calling wait() before get() is not needed //accumulate_future.wait(); // wait for result std::cout &lt;&lt; "result=" &lt;&lt; accumulate_future.get() &lt;&lt; '\n'; work_thread.join(); // wait for thread completion // Demonstrate using promise&lt;void> to signal state between threads. std::promise&lt;void> barrier; std::future&lt;void> barrier_future = barrier.get_future(); std::thread new_work_thread(do_work, std::move(barrier)); barrier_future.wait(); new_work_thread.join(); } packaged_task packaged_task绑定到一个函数或者可调用对象上。当它被调用时，它就会调用其绑定的函数或者可调用对象。并且，可以通过与之相关联的future来获取任务的结果。调度程序只需要处理packaged_task，而非各个函数。
+#include &lt;vector>
+#include &lt;thread>
+#include &lt;future>
+#include &lt;numeric>
+#include &lt;iostream>
+#include &lt;chrono>
+void accumulate(std::vector&lt;int>::iterator first,
+std::vector&lt;int>::iterator last,
+std::promise&lt;int> accumulate_promise)
+{
+int sum = std::accumulate(first, last, 0);
+accumulate_promise.set_value(sum); // Notify future
+}
+void do_work(std::promise&lt;void> barrier)
+{
+std::this_thread::sleep_for(std::chrono::seconds(1));
+barrier.set_value();
+}
+int main()
+{
+// Demonstrate using promise&lt;int> to transmit a result between threads.
+std::vector&lt;int> numbers = { 1, 2, 3, 4, 5, 6 };
+std::promise&lt;int> accumulate_promise;
+std::future&lt;int> accumulate_future = accumulate_promise.get_future();
+std::thread work_thread(accumulate, numbers.begin(), numbers.end(),
+std::move(accumulate_promise));
+// future::get() will wait until the future has a valid result and retrieves it.
+// Calling wait() before get() is not needed
+//accumulate_future.wait(); // wait for result
+std::cout &lt;&lt; "result=" &lt;&lt; accumulate_future.get() &lt;&lt; '\n';
+work_thread.join(); // wait for thread completion
+// Demonstrate using promise&lt;void> to signal state between threads.
+std::promise&lt;void> barrier;
+std::future&lt;void> barrier_future = barrier.get_future();
+std::thread new_work_thread(do_work, std::move(barrier));
+barrier_future.wait();
+new_work_thread.join();
+}
+packaged_task packaged_task绑定到一个函数或者可调用对象上。当它被调用时，它就会调用其绑定的函数或者可调用对象。并且，可以通过与之相关联的future来获取任务的结果。调度程序只需要处理packaged_task，而非各个函数。
 任务不会自己启动,你必须调用它.
-#include &lt;iostream> #include &lt;cmath> #include &lt;thread> #include &lt;future> #include &lt;functional> // unique function to avoid disambiguating the std::pow overload set int f(int x, int y) { return std::pow(x,y); } void task_lambda() { std::packaged_task&lt;int(int,int)> task([](int a, int b) { return std::pow(a, b); }); std::future&lt;int> result = task.get_future(); task(2, 9); std::cout &lt;&lt; "task_lambda:\t" &lt;&lt; result.get() &lt;&lt; '\n'; } void task_bind() { std::packaged_task&lt;int()> task(std::bind(f, 2, 11)); std::future&lt;int> result = task.get_future(); task(); std::cout &lt;&lt; "task_bind:\t" &lt;&lt; result.get() &lt;&lt; '\n'; } void task_thread() { std::packaged_task&lt;int(int,int)> task(f); std::future&lt;int> result = task.get_future(); std::thread task_td(std::move(task), 2, 10); task_td.join(); std::cout &lt;&lt; "task_thread:\t" &lt;&lt; result.get() &lt;&lt; '\n'; } int main() { task_lambda(); task_bind(); task_thread(); } C++内存模型 上文中提到的知识是以互斥体为中心的。为了避免竞争条件，是保证任何时候只有一个线程可以进入临界区
+#include &lt;iostream>
+#include &lt;cmath>
+#include &lt;thread>
+#include &lt;future>
+#include &lt;functional>
+// unique function to avoid disambiguating the std::pow overload set
+int f(int x, int y) { return std::pow(x,y); }
+void task_lambda()
+{
+std::packaged_task&lt;int(int,int)> task([](int a, int b) {
+return std::pow(a, b); });
+std::future&lt;int> result = task.get_future();
+task(2, 9);
+std::cout &lt;&lt; "task_lambda:\t" &lt;&lt; result.get() &lt;&lt; '\n';
+}
+void task_bind()
+{
+std::packaged_task&lt;int()> task(std::bind(f, 2, 11));
+std::future&lt;int> result = task.get_future();
+task();
+std::cout &lt;&lt; "task_bind:\t" &lt;&lt; result.get() &lt;&lt; '\n';
+}
+void task_thread()
+{
+std::packaged_task&lt;int(int,int)> task(f);
+std::future&lt;int> result = task.get_future();
+std::thread task_td(std::move(task), 2, 10);
+task_td.join();
+std::cout &lt;&lt; "task_thread:\t" &lt;&lt; result.get() &lt;&lt; '\n';
+}
+int main()
+{
+task_lambda();
+task_bind();
+task_thread();
+}
+C++内存模型 上文中提到的知识是以互斥体为中心的。为了避免竞争条件，是保证任何时候只有一个线程可以进入临界区
 那些策略都是基于锁（lock-based）的：一旦有一个线程进入临界区，其他线程只能等待。
 那有没有一种策略可以让其他线程不用等待，实现更好的并发呢？
 答案是肯定的，这称之为免锁（lock-free）策略。不过实现这种策略要更麻烦一些，要对C++内存模型有更深入的理解，而这也是下面所要讲解的内容。
@@ -49,11 +186,18 @@ auto f6=std::async(std::launch::async,Y(),1.2); // 在新线程上执行 auto f7
 原子操作：顾名思义，这类操作一旦执行就不会被打断，你无法看到它的中间状态，它要么是执行完成，要么没有执行。 操作的局部顺序：一系列的操作不能被乱序。 操作的可见性：定义了对于共享变量的操作如何对其他线程可见。 事实上，开发者编写的代码和最终运行的程序往往会存在较大的差异，而运行结果与开发者预想一致，只是一种“假象”罢了。
 之所以会产生差异，原因主要来自下面三个方面：
 编译器优化 CPU out-of-order执行 CPU Cache不一致性 Memory Reorder “Memory Reorder”包含了编译器和处理器两种类型的乱序。
-X = 0, Y = 0; Thread 1: X = 1; // ① r1 = Y; // ② Thread 2: Y = 1; r2 = X; 线程1中事件发生的顺序虽然是先①后②，但是对于线程2来说，它看到结果可能却是先②后①。当然，线程1看线程2也是一样的。
+X = 0, Y = 0;
+Thread 1: X = 1; // ①
+r1 = Y; // ②
+Thread 2: Y = 1;
+r2 = X;
+线程1中事件发生的顺序虽然是先①后②，但是对于线程2来说，它看到结果可能却是先②后①。当然，线程1看线程2也是一样的。
 甚至，当今的所有硬件平台，没有任何一个会提供完全的顺序一致（sequentially consistent）内存模型，因为这样做效率太低了。
 不同的编译器和处理器对于Memory Reorder有不同的偏好，但它们都遵循一定的原则，那就是：不能修改单线程的行为（Thou shalt not modify the behavior of a single-threaded program.）。在这个基础上，它们可以做各种类型的优化。
 sequenced-before sequenced-before 单线程上的关系，这是一个非对称，可传递的成对关系
-int i = 7; // ① i++; // ② 这里的 ① sequenced-before ② 。
+int i = 7; // ①
+i++; // ②
+这里的 ① sequenced-before ② 。
 happens-before happens-before关系是sequenced-before关系的扩展，因为它还包含了不同线程之间的关系。
 如果A happens-before B，则A的内存状态将在B操作执行之前就可见，这就为线程间的数据访问提供了保证。
 同样的，这是一个非对称，可传递的关系。
@@ -65,7 +209,15 @@ synchronizes-with synchronizes-with描述的是一种状态传播（propagate）
 原子 可能是使用的互斥量实现,也可能是使用的对应硬件平台的原子指令实现.
 is_lock_free() 可以用来查询是否是无锁的.
 函数 #_flag #_bool 指针类型 整形类型 说明 test_and_set Y 将flag设为true并返回原先的值 clear Y 将flag设为false is_lock_free Y Y Y 检查原子变量是否免锁 load Y Y Y 返回原子变量的值 store Y Y Y 通过一个非原子变量的值设置原子变量的值 exchange Y Y Y 用新的值替换，并返回原先的值 compare_exchange_weak compare_exchange_strong Y Y Y 比较和改变值 fetch_add, += Y Y 增加值 fetch_sub, -= Y Y 减少值 ++, &ndash; Y Y 自增和自减 fetch_or, |= Y 求或并赋值 fetch_and, &amp;= Y 求与并赋值 fetch_xor, ^= Y 求异或并赋值 memory_order 原子操作中,都支持一个类型为 std::memory_order 的可选参数。这个参数是一个枚举类型，可能的取值如下：
-typedef enum memory_order { memory_order_relaxed, memory_order_consume, memory_order_acquire, memory_order_release, memory_order_acq_rel, memory_order_seq_cst } memory_order; 首先，并非每一种memory_order对于每一个原子操作都有意义。它们的使用需要有特定的配合。
+typedef enum memory_order {
+memory_order_relaxed,
+memory_order_consume,
+memory_order_acquire,
+memory_order_release,
+memory_order_acq_rel,
+memory_order_seq_cst
+} memory_order;
+首先，并非每一种memory_order对于每一个原子操作都有意义。它们的使用需要有特定的配合。
 我们可以根据原子操作是否读写数据分为“Read”，“Write”以及“Read-Modify-Write”（读、修改、写）三类，下面是这些操作的分类。
 Operation Read Write Read-Modify-Write test_and_set Y clear Y is_lock_free Y load Y store Y exchange Y compare_exchange_strong Y compare_exchange_weak Y fetch_add, += Y fetch_sub, -= Y fetch_or, |= Y ++,– Y fetch_and, &amp;= Y fetch_xor, ^= Y 而对于每一个分类，有意义的memory_order参数如下。
 Operation Order Read memory_order_relaxed memory_order_consume memory_order_acquire memory_order_seq_cst Write memory_order_relaxed memory_order_release memory_order_seq_cst Read-modify-write memory_order_relaxed memory_order_acq_rel memory_order_seq_cst 当多个线程中包含了多个原子操作，这些原子操作因为其memory_order的选择不一样，将导致运行时不同的内存模型强度。从强至弱，有三种情况：
@@ -74,13 +226,85 @@ Sequential Consistency：顺序一致性，简称 seq-cst。 Acquire and Release
 程序指令与源码顺序一致 所有线程的所有操作存在一个全局的顺序 这意味着：所有关于原子操作的代码都不会被乱序，你可以列出线程交错的所有可能性，即便每次执行交错的结果会不一样。但对于任意一次来说，其执行的顺序必属于这些可能性中的一个。而且，对于某一个单次执行来说，所有线程看到的顺序是一致的。
 在这种模型下，每个线程中所有操作的先后关系，其顺序对于所有线程都是可见的。因此它是所有线程的全局同步。
 这种模型很容易理解，但缺点是它的性能较差。因为为了实现顺序一致需要添加很多手段来对抗编译器和CPU的优化
-#include&lt;bits/stdc++.h> std::atomic&lt;bool> x,y; std::atomic&lt;int> z; void write_x_then_y() { x.store(true); // ① y.store(true); // ② } void read_y_then_x() { while(!y.load()); // ③ if(x.load()) // ④ ++z; // ⑤ } int main() { x=false; y=false; z=0; std::thread a(write_x_then_y); std::thread b(read_y_then_x); a.join(); b.join(); assert(z.load()!=0); // ⑥ } 发生在线程a中的时序也将同步到线程b中。对于y的store和load操作构成了synchronized-with关系。
+#include&lt;bits/stdc++.h> std::atomic&lt;bool> x,y;
+std::atomic&lt;int> z;
+void write_x_then_y()
+{
+x.store(true); // ①
+y.store(true); // ②
+}
+void read_y_then_x()
+{
+while(!y.load()); // ③
+if(x.load()) // ④
+++z; // ⑤
+}
+int main()
+{
+x=false;
+y=false;
+z=0;
+std::thread a(write_x_then_y);
+std::thread b(read_y_then_x);
+a.join();
+b.join();
+assert(z.load()!=0); // ⑥
+}
+发生在线程a中的时序也将同步到线程b中。对于y的store和load操作构成了synchronized-with关系。
 1 happens-before 2 happens-before 3 happens-before 4
 acq-rel 模型 memory_order_release对应了写操作，memory_order_acquire对应了读操作，memory_order_acq_rel对应了既读又写。
 同一个原子变量上的acquire和release操作将引入synchronizes-with关系。除此之外，将不再有全局的一致顺序。
-同一个对象上的原子操作不允许被乱序。 release操作禁止了所有在它之前的读写操作与在它之后的写操作乱序。 acquire操作禁止了所有在它之前的读操作与在它之后的读写操作乱序。 #include&lt;bits/stdc++.h> std::atomic&lt;bool> x,y; std::atomic&lt;int> z; void write_x_then_y() { x.store(true, std::memory_order_relaxed); // ① y.store(true, std::memory_order_release); // ② } void read_y_then_x() { while(!y.load(std::memory_order_acquire)); // ③ if(x.load(std::memory_order_relaxed)) ++z; // ④ } int main() { x=false; y=false; z=0; std::thread a(write_x_then_y); std::thread b(read_y_then_x); a.join(); b.join(); assert(z.load()!=0); // ⑤ } relaxed 模型 在进行原子操作时，指定memory_order_relaxed时将使用relaxed模型。这是最弱的内存模型。
+同一个对象上的原子操作不允许被乱序。 release操作禁止了所有在它之前的读写操作与在它之后的写操作乱序。 acquire操作禁止了所有在它之前的读操作与在它之后的读写操作乱序。 #include&lt;bits/stdc++.h> std::atomic&lt;bool> x,y;
+std::atomic&lt;int> z;
+void write_x_then_y()
+{
+x.store(true, std::memory_order_relaxed); // ①
+y.store(true, std::memory_order_release); // ②
+}
+void read_y_then_x()
+{
+while(!y.load(std::memory_order_acquire)); // ③
+if(x.load(std::memory_order_relaxed))
+++z; // ④
+}
+int main()
+{
+x=false;
+y=false;
+z=0;
+std::thread a(write_x_then_y);
+std::thread b(read_y_then_x);
+a.join();
+b.join();
+assert(z.load()!=0); // ⑤
+}
+relaxed 模型 在进行原子操作时，指定memory_order_relaxed时将使用relaxed模型。这是最弱的内存模型。
 这个模型下唯一可以保证的是：对于特定原子变量存在全局一致的修改顺序，除此以外不再有其他保证。这意味着，即便是同样的代码，不同的线程可能会看到不同的执行顺序。
-#include&lt;bits/stdc++.h> std::atomic&lt;bool> x,y; std::atomic&lt;int> z; void write_x_then_y() { x.store(true, std::memory_order_relaxed); // ① y.store(true, std::memory_order_relaxed); // ② } void read_y_then_x() { while(!y.load(std::memory_order_relaxed)); // ③ if(x.load(std::memory_order_relaxed)) // ④ ++z; // ⑤ } int main() { x=false; y=false; z=0; std::thread a(write_x_then_y); std::thread b(read_y_then_x); a.join(); b.join(); assert(z.load()!=0); // ⑥ } 这里的assert是可能会触发的。
+#include&lt;bits/stdc++.h> std::atomic&lt;bool> x,y;
+std::atomic&lt;int> z;
+void write_x_then_y()
+{
+x.store(true, std::memory_order_relaxed); // ①
+y.store(true, std::memory_order_relaxed); // ②
+}
+void read_y_then_x()
+{
+while(!y.load(std::memory_order_relaxed)); // ③
+if(x.load(std::memory_order_relaxed)) // ④
+++z; // ⑤
+}
+int main()
+{
+x=false;
+y=false;
+z=0;
+std::thread a(write_x_then_y);
+std::thread b(read_y_then_x);
+a.join();
+b.join();
+assert(z.load()!=0); // ⑥
+}
+这里的assert是可能会触发的。
 尽管所有操作都是原子的，但是所有的事件不要求存在一个全局顺序 同一个线程内部有happens-before规则，但是线程之间可能会看到不同的顺序 另外需要说明的是：这里问题的发生只是理论上的可能。如果你将上面这个代码片段编译和运行，估计你运行100次也碰不到问题的发生。但是，这并不表示问题不存在，它只是很难发生而已。而这也恰恰是并发系统难以开发的原因之一：很多问题在绝大部分时候都不会出现，当在极少数时候发生的时候，又很难被理解。
 relaxed模型约束太小，因此常常需要结合Fence来一起使用
 Fence Fence这个单词的中文翻译就是“栅栏”，它就像一个屏障一样，使得其前后的代码不能穿越。
@@ -90,40 +314,135 @@ full fence：指定了memory_order_seq_cst或者memory_order_acq_rel。 acquire 
 acquire fence阻止了所有在它之前的读操作与在它之后的读写操作乱序
 release fence阻止了所有在它之前的读写操作与在它之后的写操作乱序
 使用fence修改relaxed的代码
-std::atomic&lt;bool> x,y; std::atomic&lt;int> z; void write_x_then_y() { x.store(true, std::memory_order_relaxed); // ① std:: (std::memory_order_release); y.store(true, std::memory_order_relaxed); // ② } void read_y_then_x() { while(!y.load(std::memory_order_relaxed)); // ③ std::atomic_thread_fence(std::memory_order_acquire); if(x.load(std::memory_order_relaxed)) ++z; // ④ } mutex和Fence 之前我们介绍了互斥体mutex：拿到mutex锁的线程将拥有唯一进入临界区的资格。
+std::atomic&lt;bool> x,y;
+std::atomic&lt;int> z;
+void write_x_then_y()
+{
+x.store(true, std::memory_order_relaxed); // ①
+std:: (std::memory_order_release);
+y.store(true, std::memory_order_relaxed); // ②
+}
+void read_y_then_x()
+{
+while(!y.load(std::memory_order_relaxed)); // ③
+std::atomic_thread_fence(std::memory_order_acquire);
+if(x.load(std::memory_order_relaxed))
+++z; // ④
+}
+mutex和Fence 之前我们介绍了互斥体mutex：拿到mutex锁的线程将拥有唯一进入临界区的资格。
 除了保证互斥之外，其实mutex的加锁和解锁之间也起到了“栅栏”的作用。因为在栅栏里面的代码是怎么都不会被优化乱序到栅栏之外（但不保证栅栏之外的内容进入到栅栏之中）。
 如下图的三种情况，第一种可能会被优化成第二种。但是第二种情况不会被优化成第三种：
 GCC官方的解释: http://gcc.gnu.org/wiki/Atomic/GCCMM/AtomicSync
-Sequentially Consistent 顺序一致性 -Thread 1- -Thread 2- y = 1 if (x.load() == 2) x.store (2); assert (y == 1) 断言一定能成功,在线程1中,y的存储 happens-before x的存储
+Sequentially Consistent 顺序一致性 -Thread 1- -Thread 2-
+y = 1 if (x.load() == 2)
+x.store (2); assert (y == 1)
+断言一定能成功,在线程1中,y的存储 happens-before x的存储
 线程2看到的也一样.
-a = 0 y = 0 b = 1 -Thread 1- -Thread 2- x = a.load() while (y.load() != b) y.store (b) ; while (a.load() == x) a.store(1) ; 线程2循环,等待y的值发生变化,然后改变a
+a = 0
+y = 0
+b = 1
+-Thread 1- -Thread 2-
+x = a.load() while (y.load() != b)
+y.store (b) ;
+while (a.load() == x) a.store(1)
+;
+线程2循环,等待y的值发生变化,然后改变a
 线程1正在等待a发生变化
--Thread 1- -Thread 2- -Thread 3- y.store (20); if (x.load() == 10) { if (y.load() == 10) x.store (10); assert (y.load() == 20) assert (x.load() == 10) y.store (10) } 两个断言都一定成功
+-Thread 1- -Thread 2- -Thread 3-
+y.store (20); if (x.load() == 10) { if (y.load() == 10)
+x.store (10); assert (y.load() == 20) assert (x.load() == 10)
+y.store (10)
+}
+两个断言都一定成功
 Relaxed宽松顺序 这个模型消除了 &ldquo;再发生之前"的限制, 减少了同步
--Thread 1- y.store (20, memory_order_relaxed) x.store (10, memory_order_relaxed) -Thread 2- if (x.load (memory_order_relaxed) == 10) { assert (y.load(memory_order_relaxed) == 20) /* assert A */ y.store (10, memory_order_relaxed) } -Thread 3- if (y.load (memory_order_relaxed) == 10) assert (x.load(memory_order_relaxed) == 10) /* assert B */ 两个断言可能会失败.
+-Thread 1-
+y.store (20, memory_order_relaxed)
+x.store (10, memory_order_relaxed)
+-Thread 2-
+if (x.load (memory_order_relaxed) == 10)
+{
+assert (y.load(memory_order_relaxed) == 20) /* assert A */
+y.store (10, memory_order_relaxed)
+}
+-Thread 3-
+if (y.load (memory_order_relaxed) == 10)
+assert (x.load(memory_order_relaxed) == 10) /* assert B */
+两个断言可能会失败.
 不存在任何的happens-before, 任何一个线程都不依赖另一个线程的顺序.
 唯一存在的顺序:线程2看到的线程1中一个变量的值(如x),那么它就无法看到x的更早的值.
--Thread 1- x.store (1, memory_order_relaxed) x.store (2, memory_order_relaxed) -Thread 2- y = x.load (memory_order_relaxed) z = x.load (memory_order_relaxed) assert (y &lt;= z) 断言一定成功
+-Thread 1-
+x.store (1, memory_order_relaxed)
+x.store (2, memory_order_relaxed)
+-Thread 2-
+y = x.load (memory_order_relaxed)
+z = x.load (memory_order_relaxed)
+assert (y &lt;= z)
+断言一定成功
 线程2只能看到最新值,无法看到旧值.
 在一定时间内,realxed load可以看到另一个线程的realxed store,这意味着,realxed 操作需要刷新缓存
 当编程者只是希望一个变量是原子的,而不需要和其他线程进行同步时,就可以使用realxed模式
 Acquire/Release 获得释放一致性 这个模式是前两种的混合, 它和sequentially consistent 相似,
 它只对依赖的变量应用happens-before关系
-同一个对象上的原子操作不允许被乱序。 release操作禁止了所有在它之前的读写操作与在它之后的写操作乱序。 acquire操作禁止了所有在它之前的读操作与在它之后的读写操作乱序。 -Thread 1- y.store (20, memory_order_release); -Thread 2- x.store (10, memory_order_release); -Thread 3- assert (y.load (memory_order_acquire) == 20 &amp;&amp; x.load (memory_order_acquire) == 0) -Thread 4- assert (y.load (memory_order_acquire) == 0 &amp;&amp; x.load (memory_order_acquire) == 10) -Thread 1- y = 20; x.store (10, memory_order_release); -Thread 2- if (x.load(memory_order_acquire) == 10) assert (y == 20); 线程1中,对y的写操作,不能乱序
+同一个对象上的原子操作不允许被乱序。 release操作禁止了所有在它之前的读写操作与在它之后的写操作乱序。 acquire操作禁止了所有在它之前的读操作与在它之后的读写操作乱序。 -Thread 1-
+y.store (20, memory_order_release);
+-Thread 2-
+x.store (10, memory_order_release);
+-Thread 3-
+assert (y.load (memory_order_acquire) == 20 &amp;&amp; x.load (memory_order_acquire) == 0)
+-Thread 4-
+assert (y.load (memory_order_acquire) == 0 &amp;&amp; x.load (memory_order_acquire) == 10)
+-Thread 1-
+y = 20;
+x.store (10, memory_order_release);
+-Thread 2-
+if (x.load(memory_order_acquire) == 10)
+assert (y == 20);
+线程1中,对y的写操作,不能乱序
 线程2中,对y的读操作,不能乱序
 断言一定成功
 Consume 消费 比较特殊,不推荐使用
--Thread 1- n = 1 m = 1 p.store (&amp;n, memory_order_release) -Thread 2- t = p.load (memory_order_acquire); assert( *t == 1 &amp;&amp; m == 1 ); -Thread 3- t = p.load (memory_order_consume); assert( *t == 1 &amp;&amp; m == 1 ); 线程2中的断言成功
+-Thread 1-
+n = 1
+m = 1
+p.store (&amp;n, memory_order_release)
+-Thread 2-
+t = p.load (memory_order_acquire);
+assert( *t == 1 &amp;&amp; m == 1 );
+-Thread 3-
+t = p.load (memory_order_consume);
+assert( *t == 1 &amp;&amp; m == 1 );
+线程2中的断言成功
 因为m的存储发生在p.store之前.
 线程3中的断言失败
-全面总结 -Thread 1- -Thread 2- -Thread 3- y.store (20); if (x.load() == 10) { if (y.load() == 10) x.store (10); assert (y.load() == 20) assert (x.load() == 10) y.store (10) } 如果是顺序一致性同步的话,必须在系统中刷新所有可见变量,以至于所有线程看到相同的状态.
+全面总结 -Thread 1- -Thread 2- -Thread 3-
+y.store (20); if (x.load() == 10) { if (y.load() == 10)
+x.store (10); assert (y.load() == 20) assert (x.load() == 10)
+y.store (10)
+}
+如果是顺序一致性同步的话,必须在系统中刷新所有可见变量,以至于所有线程看到相同的状态.
 断言成立
 如果是acq rel模式的话,只需要同步涉及的两个线程,这意味着同步值不能与其他线程交换.
 线程1和线程2因为 x.load 同步,所以断言成立
 线程2和线程3因为 y.load同步,但是线程1和线程3没有同步,所以x的值不一定是10,断言可能会失败
 如果是relaxed,所有断言都有可能失败,因为根本没有同步.
-混合模式 -Thread 1- y.store (20, memory_order_relaxed) x.store (10, memory_order_seq_cst) -Thread 2- if (x.load (memory_order_relaxed) == 10) { assert (y.load(memory_order_seq_cst) == 20) /* assert A */ y.store (10, memory_order_relaxed) } -Thread 3- if (y.load (memory_order_acquire) == 10) assert (x.load(memory_order_acquire) == 10) /* assert B */ 首先,不要这样做
-1. 16472131 2. 82526461 3. 93023508 4. 09183796 5. 46548500 6. 32016383</content></entry><entry><title>并行编程</title><url>http://rayrain.xyz/post/parallel/</url><categories/><tags><tag>多核</tag></tags><content type="html"> 参考:C++11中的内存模型
+混合模式 -Thread 1-
+y.store (20, memory_order_relaxed)
+x.store (10, memory_order_seq_cst)
+-Thread 2-
+if (x.load (memory_order_relaxed) == 10)
+{
+assert (y.load(memory_order_seq_cst) == 20) /* assert A */
+y.store (10, memory_order_relaxed)
+}
+-Thread 3-
+if (y.load (memory_order_acquire) == 10)
+assert (x.load(memory_order_acquire) == 10) /* assert B */
+首先,不要这样做
+1. 16472131 2. 82526461 3. 93023508 4. 09183796 5. 46548500 6. 32016383</content></entry><entry><title>常用的网站</title><url>http://rayrain.xyz/post/web/</url><categories/><tags><tag>网站</tag></tags><content type="html"> 观察编译器背后行为的网站 https://godbolt.org/ https://www.godbolt.ms/
+cpp的手册 https://en.cppreference.com/w/cpp
+在线编译器 https://www.onlinegdb.com/online_c++_compiler
+在线正则表达式 https://regex101.com/
+ascii画图 https://asciiflow.com/legacy/</content></entry><entry><title>并行编程</title><url>http://rayrain.xyz/post/parallel/</url><categories/><tags><tag>多核</tag></tags><content type="html"> 参考:C++11中的内存模型
 https://paul.pub/cpp-memory-model/
 多核CPU架构 顺序一致性Sequential Consistency 每个处理器的执行顺序和代码中的顺序（program order）一样。 所有处理器都只能看到一个单一的操作执行顺序。 实际上还是相当于同一时间只有一个线程在工作，这种保证导致了程序是低效的，无法充分利用上多核的优点。
 全存储排序（Total Store Ordering, 简称TSO） 在处理核心中增加写缓存，一个写操作只要写入到本核心的写缓存中就可以返回
@@ -177,11 +496,7 @@ future 来存储一个异步任务的执行结果, 哪怕这个异步任务还�
 就可以定义一个 future来接受 这个异步任务的结果
 需要进行一次长时间的运算,但是你现在不急的要,可以启动一个新线程来执行这个运算,
 但是 thread 并没有机制获取返回值, 这里就需要async 来实现了.
-C++ 中的算法可以加上一个 新参数,并行执行算法</content></entry><entry><title>常用的网站</title><url>http://rayrain.xyz/post/web/</url><categories/><tags><tag>网站</tag></tags><content type="html"> 观察编译器背后行为的网站 https://godbolt.org/ https://www.godbolt.ms/
-cpp的手册 https://en.cppreference.com/w/cpp
-在线编译器 https://www.onlinegdb.com/online_c++_compiler
-在线正则表达式 https://regex101.com/
-ascii画图 https://asciiflow.com/legacy/</content></entry><entry><title>面试</title><url>http://rayrain.xyz/post/interview/</url><categories/><tags><tag>interview</tag></tags><content type="html"> C/C++相关 static 关键字 修饰局部变量, 修饰全局变量, 修饰成员变量, 修饰普通函数, 修饰成员函数, 修饰类,this指针等 const 关键字 修饰变量，说明该变量不可以被改变； 修饰指针，分为指向常量的指针（pointer to const）和自身是常量的指针（常量指针，const pointer）； 修饰引用，指向常量的引用（reference to const），用于形参类型，即避免了拷贝，又避免了函数对值的修改； 修饰成员函数，说明该成员函数内不能修改成员变量。 宏和常量的区别 宏定义 #define const 常量 宏定义，相当于字符替换 常量声明 预处理器处理 编译器处理 无类型安全检查 有类型安全检查 不分配内存 要分配内存 存储在代码段 存储在数据段 可通过 #undef 取消 不可取消 内存 栈stack, 只要出现花括号,就会开辟新栈 堆heap 未初始化全局变量bss, 初始化全局变量,存放全局数据和静态数据,又可细分为可读和可写区 代码段text,只读 内存泄漏 堆栈溢出
+C++ 中的算法可以加上一个 新参数,并行执行算法</content></entry><entry><title>面试</title><url>http://rayrain.xyz/post/interview/</url><categories/><tags><tag>interview</tag></tags><content type="html"> C/C++相关 static 关键字 修饰局部变量, 修饰全局变量, 修饰成员变量, 修饰普通函数, 修饰成员函数, 修饰类,this指针等 const 关键字 修饰变量，说明该变量不可以被改变； 修饰指针，分为指向常量的指针（pointer to const）和自身是常量的指针（常量指针，const pointer）； 修饰引用，指向常量的引用（reference to const），用于形参类型，即避免了拷贝，又避免了函数对值的修改； 修饰成员函数，说明该成员函数内不能修改成员变量。 宏和常量的区别 宏定义 #define const 常量 宏定义，相当于字符替换 常量声明 预处理器处理 编译器处理 无类型安全检查 有类型安全检查 不分配内存 要分配内存 存储在代码段 存储在数据段 可通过 #undef 取消 不可取消 内存 栈stack, 只要出现花括号,就会开辟新栈 堆heap 未初始化全局变量bss, 初始化全局变量,存放全局数据和静态数据,又可细分为可读和可写区 代码段text,只读 内存泄漏 堆栈溢出
 指针和引用 引用和指针的区别, 引用只是别名,不需要分配内存空间,指针是变量,需要分配内存空间
 引用和指针的尺寸, 引用不占内存,指针的尺寸和cpu的字长有关.
 右值引用,表示什么意思?有什么用?[完美转发是什么?] 可以实现移动语义,实现移动构造函数,避免深拷贝
@@ -201,7 +516,71 @@ new delete 智能指针
 STM32等ARM核的高级单片机
 中断 中断向量表 DMA等问题
 QT相关 父类被析构时,需不需要手动析构子类对象,为什么? 对象树机制
-操作系统相关</content></entry><entry><title>C++刷题记录</title><url>http://rayrain.xyz/post/c++test/</url><categories/><tags><tag>C</tag><tag>CPP</tag></tags><content type="html"> 一些算法 技巧 对于算法来说,迭代器的区间都是前闭后开 计算某个区间之和accumulate 从迭代器获得index : i - num.begin() distance(num.begin(),i) 操作string isalnum,判断单个字符是否是 字母或数字 tolower 单个字符转小写 牛顿法平方根 public int mySqrt(int x) { int start = 0, end = x; int res = -1; while (start &lt;= end) { int mid = start + (end - start)/2; if ((long)mid * mid &lt;= x) { start = mid + 1; res = mid; } else { end = mid -1; } } return res; } cin读入逗号分隔的数字 #include&lt;bits/stdc++.h> using namespace std; int main() { vector&lt;int> data; string s; getline(cin,s); istringstream input; input.str(s); for(string line;getline(input,line,',');) { data.push_back(stoi(line)); } int sum = 0; for(auto i:data) sum+=i; cout&lt;&lt;sum; return 0; } leetcode版本的链表与使用 #include&lt;bits/stdc++.h> using namespace std; struct ListNode { int val; ListNode *next; ListNode() : val(0), next(nullptr) {} ListNode(int x) : val(x), next(nullptr) {} ListNode(int x, ListNode *next) : val(x),next(next) {} }; int main() { ListNode* head = new ListNode(0); ListNode* point = head; for(int i = 1; i &lt; 10; i++) { point->next = new ListNode(i); point = point->next; } point = head; while(1) { cout&lt;&lt; point->val &lt;&lt; endl; if (point->next) point = point->next; else break; } return 0; }</content></entry><entry><title>riscv 启动分析</title><url>http://rayrain.xyz/post/riscvhead/</url><categories/><tags><tag>riscv</tag><tag>kernel</tag></tags><content type="html"> 简单分析了下 relocate 和 setup_vm
+操作系统相关</content></entry><entry><title>C++刷题记录</title><url>http://rayrain.xyz/post/c++test/</url><categories/><tags><tag>C</tag><tag>CPP</tag></tags><content type="html"> 一些算法 技巧 对于算法来说,迭代器的区间都是前闭后开
+计算某个区间之和accumulate
+从迭代器获得index : i - num.begin()
+distance(num.begin(),i)
+操作string
+isalnum,判断单个字符是否是 字母或数字
+tolower 单个字符转小写
+牛顿法平方根 public int mySqrt(int x) {
+int start = 0, end = x;
+int res = -1;
+while (start &lt;= end) {
+int mid = start + (end - start)/2;
+if ((long)mid * mid &lt;= x) {
+start = mid + 1;
+res = mid;
+} else {
+end = mid -1;
+}
+}
+return res;
+}
+cin读入逗号分隔的数字 #include&lt;bits/stdc++.h>
+using namespace std;
+int main()
+{
+vector&lt;int> data;
+string s;
+getline(cin,s);
+istringstream input;
+input.str(s);
+for(string line;getline(input,line,',');) {
+data.push_back(stoi(line));
+}
+int sum = 0;
+for(auto i:data) sum+=i;
+cout&lt;&lt;sum;
+return 0;
+}
+leetcode版本的链表与使用 #include&lt;bits/stdc++.h>
+using namespace std;
+struct ListNode {
+int val;
+ListNode *next;
+ListNode() : val(0), next(nullptr) {}
+ListNode(int x) : val(x), next(nullptr) {}
+ListNode(int x, ListNode *next) : val(x),next(next) {}
+};
+int main()
+{
+ListNode* head = new ListNode(0);
+ListNode* point = head;
+for(int i = 1; i &lt; 10; i++) {
+point->next = new ListNode(i);
+point = point->next;
+}
+point = head;
+while(1) {
+cout&lt;&lt; point->val &lt;&lt; endl;
+if (point->next)
+point = point->next;
+else
+break;
+}
+return 0;
+}</content></entry><entry><title>riscv 启动分析</title><url>http://rayrain.xyz/post/riscvhead/</url><categories/><tags><tag>riscv</tag><tag>kernel</tag></tags><content type="html"> 简单分析了下 relocate 和 setup_vm
 首先是 setup_vm , 它设置了两个页表:
 early_pg_dir,将内核自身处于的连续物理内存区域映射到位于PAGE_OFFSET的虚拟内存地址上 而FIXMAP映射并没有映射全部的FIXMAP，而是仅仅影射了FIX_FDT部分，让后续的代码可以访问设备树。
 trampoline_pg_dir 将PAGE_OFFSET后长为PMD_SIZE的区域映射到load_pa，即内核起始被装载后的起始物理内存地址。

@@ -6,7 +6,7 @@ description = "qemu"
 toc= true
 math= true
 tags = [
-    kernel"
+    "kernel"
 ]
 +++
 
