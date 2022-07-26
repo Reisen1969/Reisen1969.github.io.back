@@ -8,11 +8,12 @@ math= true
 tags = [
     "C","CPP","leetcode"
 ]
+
 +++
 
 # 算法框架
 
-## 遍历
+## 各种遍历
 
 ### 数组的遍历
 
@@ -79,7 +80,7 @@ void traverse(TreeNode root) {
 ```
 /* 滑动窗口算法框架 */
 void slidingWindow(string s) {
-    unordered_map<char, int> window;
+    unordered_map<char, int> window , need;
     
     int left = 0, right = 0;
     while (right < s.size()) {
@@ -88,6 +89,7 @@ void slidingWindow(string s) {
         // 增大窗口
         right++;
         // 进行窗口内数据的一系列更新
+        //将拿到的数据放入窗口
         ...
 
         /*** debug 输出的位置 ***/
@@ -101,6 +103,7 @@ void slidingWindow(string s) {
             // 缩小窗口
             left++;
             // 进行窗口内数据的一系列更新
+            //将窗口的数据移除
             ...
         }
     }
@@ -108,6 +111,8 @@ void slidingWindow(string s) {
 ```
 
 
+
+# STL的部分使用
 
 
 
