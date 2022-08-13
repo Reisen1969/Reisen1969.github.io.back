@@ -8,6 +8,7 @@ math= true
 tags = [
     "riscv","kernel","qemu"
 ]
+
 +++
 
 
@@ -102,6 +103,14 @@ $ sudo rmdir /mnt/rootfs
 qemu-system-riscv64 -nographic -machine virt \
      -kernel linux/arch/riscv/boot/Image -append "root=/dev/vda ro console=ttyS0" \
      -drive file=your_rootfs.img,format=raw,id=hd0 \
-     -device virtio-blk-device,drive=hd0
+     -device virtio-blk-device,drive=hd0 \
+     -fsdev local,id=p9fs,path=./share,security_model=mapped \
+-device virtio-9p-pci,fsdev=p9fs,mount_tag=p9
+```
+
+## 挂载共享目录
+
+```
+mount p9 -t 9p /mnt
 ```
 
