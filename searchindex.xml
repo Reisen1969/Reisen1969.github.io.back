@@ -10,7 +10,7 @@
 该文大量使用了 transaction 一词, 我将它翻译为 &ldquo;交易&rdquo;
 当一个新的交易进入网络时，它会在计算机之间进行转发，直到每个人都拥有该交易的副本。大约每隔10分钟，网络上的一台随机计算机(节点)将把它们收到的最新交易添加到区块链上，并与网络上的其他所有人共享更新。
 因此, 比特币程序创建了一个大型计算机网络，这些计算机彼此通信，共享一个文件，并用新的交易更新它。
-比特币解决了什么问题? 在比特币出现之前, 通过计算机进行电子交易是可能的 , 然而, 可以在计算机网络中插入冲突的交易。例如，您可以创建两个使用相同数字货币的独立交易，并将这两个交易同时发送到网络。 这就是所谓的“双重消费”。
+处理双重消费 在比特币出现之前, 通过计算机进行电子交易是可能的 , 然而, 可以在计算机网络中插入冲突的交易。例如，您可以创建两个使用相同数字货币的独立交易，并将这两个交易同时发送到网络。 这就是所谓的“双重消费”。
 因此，设计一个去中心化的电子支付系统，会遇到一个问题，即确定哪些交易是“先”进行的，当拥有一个由所有独立运行的计算机组成的网络时，这是一件很难做到的事情。有些计算机将首先接收绿色交易，而有些计算机将首先接收红色交易。
 谁来决定哪一个“先”出现，并且应该是写入文件的唯一一个? 比特币通过迫使节点在写入文件之前将它们收到的所有交易保存在内存中来解决这个问题。然后，每隔10分钟，网络上的一个随机节点将把它们的内存中的交易添加到文件中。
 然后，这个更新后的文件与网络共享，节点将接受更新后文件中的交易为“正确的”，从它们的内存中删除任何冲突的交易。因此，不会将双重花费交易写到文件中，所有节点都可以按照彼此的协议更新它们的文件。
@@ -75,7 +75,7 @@ wait()来等待该异步任务结束
 get()获取该异步任务的结果
 async 假设你需要一个长时间的运算,但并不迫切的需要这个值,可以启动一个新线程来执行这个计算,但是thread 并没有机制获得返回值.
 可以使用async启动一个异步任务,而且会返回一个 future对象.
-#include &lt;future>#include &lt;iostream>int find_the_answer_to_ltuae() { return 42; } void do_other_stuff() {} int main() { std::future&lt;int> the_answer=std::async(find_the_answer_to_ltuae); do_other_stuff(); std::cout&lt;&lt;"The answer is "&lt;&lt;the_answer.get()&lt;&lt;std::endl; } async是否会启动一个新线程, 标准没有定义,由编译器决定,
+#include &lt;future> #include &lt;iostream> int find_the_answer_to_ltuae() { return 42; } void do_other_stuff() {} int main() { std::future&lt;int> the_answer=std::async(find_the_answer_to_ltuae); do_other_stuff(); std::cout&lt;&lt;"The answer is "&lt;&lt;the_answer.get()&lt;&lt;std::endl; } async是否会启动一个新线程, 标准没有定义,由编译器决定,
 如果一定要启动新线程,可以加入launch::async参数来说明.
 std::launch::async 在独立线程上执行
 std::launch::deferred 在wait或者get调用时执行 ,并不是独立线程
