@@ -50,6 +50,10 @@ make ARCH=riscv CROSS_COMPILE=riscv64-linux-gnu- defconfig
 make ARCH=riscv CROSS_COMPILE=riscv64-linux-gnu- -j $(nproc)
 
 
+//编译方法2
+  make ARCH=riscv CROSS_COMPILE=riscv64-linux-gnu- defconfig
+  make ARCH=riscv CROSS_COMPILE=riscv64-linux-gnu-  menuconfig
+  make -j $(nproc) ARCH=riscv CROSS_COMPILE=riscv64-linux-gnu- vmlinux
 
 ```
 
