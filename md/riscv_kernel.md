@@ -48,6 +48,9 @@ make -j $(nproc)
 make ARCH=riscv CROSS_COMPILE=riscv64-linux-gnu- defconfig
 //开始编译
 make ARCH=riscv CROSS_COMPILE=riscv64-linux-gnu- -j $(nproc)
+
+
+
 ```
 
 ## 编译Busybox
